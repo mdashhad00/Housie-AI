@@ -1,0 +1,507 @@
+"""
+Comprehensive Knowledge Base for Top 100 Mobile & Web Applications.
+Bilingual: English + Hinglish with trigger aliases.
+"""
+
+APPS_KNOWLEDGE = {
+    'tiktok': {
+        'aliases': ['tiktok', 'tik tok'],
+        'e': "🎵 **TikTok:**\n\n🔹 **What it is:** A platform for creating, discovering, and sharing short-form vertical videos, famous for its viral algorithm.\n🔹 **Developer:** ByteDance (launched internationally in 2017).\n🔹 **Key Features:** For You Page (FYP) algorithm, audio syncing, creative duet/stitch tools, viral trends, and TikTok Shop.\n🔹 **Scale:** Over 1.5 Billion monthly active users worldwide!",
+        'h': "🎵 **TikTok:**\n\n🔹 **Kya hai:** Short-form vertical video bananey aur dekhne ka world-famous platform hai jo ByteDance ne banaya hai.\n🔹 **Features:** Iska 'For You' algorithm trending aur viral videos dikhata hai. Duets, sound effects aur video filters iske main features hain!\n🔹 **Scale:** Duniya bhar mein 1.5 Billion se zyada active users hain."
+    },
+    'whatsapp': {
+        'aliases': ['whatsapp', 'wa'],
+        'e': "💬 **WhatsApp:**\n\n🔹 **What it is:** An internationally popular instant messaging app providing end-to-end encrypted text, voice, and video communication.\n🔹 **Owner:** Meta (Facebook), acquired in 2014 for ~$19 Billion.\n🔹 **Key Features:** End-to-end encryption, voice/video group calls, WhatsApp Web, Status updates, and Channels.\n🔹 **Scale:** Over 2.7 Billion active users globally!",
+        'h': "💬 **WhatsApp:**\n\n🔹 **Kya hai:** Duniya ka sabse bada messaging app hai jo end-to-end encryption ke saath chat, voice aur video call provide karta hai.\n🔹 **Owner:** Meta (Facebook).\n🔹 **Features:** Secure chat, group video calls, status updates aur WhatsApp Web.\n🔹 **Scale:** 2.7 Billion se zyada log ise daily use karte hain!"
+    },
+    'instagram': {
+        'aliases': ['instagram', 'insta', 'ig'],
+        'e': "📸 **Instagram (IG):**\n\n🔹 **What it is:** A visual-first social network by Meta focused on photo sharing, short videos (Reels), and disappearing daily stories.\n🔹 **Founded:** 2010 by Kevin Systrom & Mike Krieger; acquired by Facebook in 2012.\n🔹 **Key Features:** Feed posts, 24-hour Stories, Reels algorithm, Direct Messages (DMs), and Explore tab.\n🔹 **Scale:** Over 2.4 Billion active users worldwide!",
+        'h': "📸 **Instagram:**\n\n🔹 **Kya hai:** Meta ka visual social network jo photo sharing, viral Reels aur 24-ghante ki Stories ke liye mashhoor hai.\n🔹 **Features:** Reels, photo filters, DMs, Explore page aur creator tools.\n🔹 **Scale:** Duniya bhar mein 2.4 Billion se zyada users hain!"
+    },
+    'facebook': {
+        'aliases': ['facebook', 'fb', 'meta'],
+        'e': "👥 **Facebook:**\n\n🔹 **What it is:** A major social networking platform founded by Mark Zuckerberg in 2004, allowing users to share posts, join groups, and connect globally.\n🔹 **Parent Company:** Meta Platforms.\n🔹 **Key Features:** News Feed, Facebook Groups, Marketplace, Watch, and Pages for creators/businesses.\n🔹 **Scale:** Over 3 Billion monthly active users — the largest social network in history!",
+        'h': "👥 **Facebook:**\n\n🔹 **Kya hai:** Mark Zuckerberg ne 2004 mein launch kiya tha. Yeh duniya ka sabse bada social network hai.\n🔹 **Features:** News Feed, Groups, Marketplace, Pages aur video watch.\n🔹 **Scale:** 3 Billion se zyada active users hain!"
+    },
+    'telegram': {
+        'aliases': ['telegram', 'tg'],
+        'e': "✈️ **Telegram:**\n\n🔹 **What it is:** A cloud-based instant messaging app recognized for its speed, privacy features, bot ecosystem, and large broadcast channels.\n🔹 **Founded:** 2013 by Nikolai and Pavel Durov.\n🔹 **Key Features:** Channels with unlimited subscribers, groups up to 200,000 members, custom bots, cloud file storage up to 2GB, and Secret Chats.",
+        'h': "✈️ **Telegram:**\n\n🔹 **Kya hai:** Pavel Durov dwara banaya gaya ultra-fast cloud messaging app jo privacy aur large channels ke liye jaana jaata hai.\n🔹 **Features:** Unlimited members wale channels, bots, 2GB tak file sharing aur Secret Chats!"
+    },
+    'snapchat': {
+        'aliases': ['snapchat', 'snap'],
+        'e': "👻 **Snapchat:**\n\n🔹 **What it is:** A multimedia messaging app centered around ephemeral (disappearing) photos/videos, Snap Streaks, and augmented reality (AR) lenses.\n🔹 **Developer:** Snap Inc. (Evan Spiegel, Bobby Murphy).\n🔹 **Key Features:** Disappearing Snaps, AR Face Lenses, Snap Map, Stories, and Spotlight.",
+        'h': "👻 **Snapchat:**\n\n🔹 **Kya hai:** Photos aur videos bhejne ka app jahan messages dekhne ke baad gayab ho jaate hain!\n🔹 **Features:** Mazedaar AR Lenses/Filters, Snap Streaks, Snap Map aur Stories."
+    },
+    'temu': {
+        'aliases': ['temu'],
+        'e': "🛍️ **Temu:**\n\n🔹 **What it is:** A rapidly growing global e-commerce marketplace offering a vast range of products at heavily discounted prices directly from manufacturers.\n🔹 **Parent Company:** PDD Holdings (sister company to Pinduoduo).\n🔹 **Key Features:** Ultra-low wholesale pricing, gamified shopping rewards, and direct-from-factory shipping.",
+        'h': "🛍️ **Temu:**\n\n🔹 **Kya hai:** Ek massive online shopping app hai jo factory se direct products heavily discounted prices par bechta hai.\n🔹 **Parent Company:** PDD Holdings."
+    },
+    'chatgpt': {
+        'aliases': ['chatgpt', 'chat gpt', 'openai'],
+        'e': "🤖 **ChatGPT:**\n\n🔹 **What it is:** An advanced AI assistant developed by OpenAI capable of conversational reasoning, answering questions, writing code, and creative work.\n🔹 **Launched:** November 2022 by OpenAI (Sam Altman).\n🔹 **Underlying Tech:** Generative Pre-trained Transformers (GPT-4o, GPT-4).\n🔹 **Features:** Voice conversations, web browsing, code execution, image generation (DALL-E), and custom GPTs.",
+        'h': "🤖 **ChatGPT:**\n\n🔹 **Kya hai:** OpenAI ka banaya gaya world-famous generative AI assistant hai jo sawaalon ke jawab, coding, aur essay writing kar sakta hai.\n🔹 **Features:** Voice chat, problem solving, programming help aur creative writing!"
+    },
+    'capcut': {
+        'aliases': ['capcut', 'cap cut'],
+        'e': "🎬 **CapCut:**\n\n🔹 **What it is:** An intuitive, all-in-one video editing app developed by ByteDance, widely used to create and format viral videos for TikTok, Reels, and YouTube Shorts.\n🔹 **Key Features:** Trending templates, auto-captions, keyframe animation, background removal, and speed ramping.",
+        'h': "🎬 **CapCut:**\n\n🔹 **Kya hai:** ByteDance ka video editing app hai jo Reels aur TikTok videos banane ke liye duniya bhar mein sabse popular hai.\n🔹 **Features:** Auto-subtitles, trending templates, background remove aur audio effects."
+    },
+    'duolingo': {
+        'aliases': ['duolingo'],
+        'e': "🦉 **Duolingo:**\n\n🔹 **What it is:** An educational app that turns learning new languages into a game through interactive, bite-sized daily lessons and streaks.\n🔹 **Mascot:** Duo the green owl.\n🔹 **Features:** 40+ languages (Spanish, French, Japanese, etc.), gamification with XP and leaderboards, and daily practice streaks.",
+        'h': "🦉 **Duolingo:**\n\n🔹 **Kya hai:** Nayi bhashayein (English, Spanish, French etc.) seekhne ka gamified app hai jahan chhote-chhote lessons aur streaks se padhaaya jaata hai.\n🔹 **Mascot:** Duo the green owl!"
+    },
+    'uber': {
+        'aliases': ['uber'],
+        'e': "🚗 **Uber:**\n\n🔹 **What it is:** A global ride-hailing pioneer connecting passengers with drivers for on-demand car rides, auto-rickshaws, and motorbike taxis.\n🔹 **Founded:** 2009 by Travis Kalanick & Garrett Camp.\n🔹 **Features:** Real-time GPS driver tracking, cashless digital payments, Uber Auto, Uber Moto, and safety trip-sharing.",
+        'h': "🚗 **Uber:**\n\n🔹 **Kya hai:** On-demand taxi aur cab booking app hai jo GPS ke zariye turant car, bike ya auto connect karta hai.\n🔹 **Features:** Live GPS tracking, cashless payment aur trip safety sharing."
+    },
+    'linkedin': {
+        'aliases': ['linkedin'],
+        'e': "💼 **LinkedIn:**\n\n🔹 **What it is:** The world's largest professional networking platform, designed for career development, job hunting, recruitment, and B2B business connections.\n🔹 **Parent Company:** Microsoft (acquired in 2016 for $26.2 Billion).\n🔹 **Features:** Professional profile/resume, job listings, networking posts, and LinkedIn Learning.",
+        'h': "💼 **LinkedIn:**\n\n🔹 **Kya hai:** Microsoft ka professional social network hai jahan job search, hiring, business networking aur career building hoti hai."
+    },
+    'cash app': {
+        'aliases': ['cash app', 'cashapp'],
+        'e': "💵 **Cash App:**\n\n🔹 **What it is:** A popular peer-to-peer mobile payment service developed by Block, Inc. (formerly Square) allowing users to transfer money, buy stocks, and trade Bitcoin.\n🔹 **Features:** $Cashtags for easy sending, free debit Cash Card, and Bitcoin trading.",
+        'h': "💵 **Cash App:**\n\n🔹 **Kya hai:** Block (Square) ka peer-to-peer payment app hai jisse log aapas mein paise transfer, stocks invest aur Bitcoin buy karte hain."
+    },
+    'netflix': {
+        'aliases': ['netflix'],
+        'e': "🍿 **Netflix:**\n\n🔹 **What it is:** The world's leading subscription-based video streaming service offering an expansive catalog of films, TV shows, anime, and original productions (Netflix Originals).\n🔹 **Iconic Originals:** Stranger Things, Squid Game, Wednesday, Money Heist.\n🔹 **Scale:** Over 270 Million paid subscribers globally.",
+        'h': "🍿 **Netflix:**\n\n🔹 **Kya hai:** Duniya ka sabse bada on-demand OTT streaming platform hai jahan movies, web series aur award-winning shows milte hain (jaise Stranger Things, Squid Game)."
+    },
+    'youtube': {
+        'aliases': ['youtube', 'yt'],
+        'e': "▶️ **YouTube:**\n\n🔹 **What it is:** The world's largest video-sharing platform owned by Google, hosting billions of user-uploaded videos, music, gaming streams, and educational content.\n🔹 **Founded:** 2005; acquired by Google in 2006 for $1.65 Billion.\n🔹 **Features:** Long-form videos, YouTube Shorts, YouTube Live, and monetization for content creators.\n🔹 **Scale:** 2.5+ Billion monthly active users!",
+        'h': "▶️ **YouTube:**\n\n🔹 **Kya hai:** Google ka world-famous video platform jahan har minute 500 ghante ka video upload hota hai!\n🔹 **Features:** Videos, Shorts, Live streaming aur Creator Monetization."
+    },
+    'amazon prime video': {
+        'aliases': ['prime video', 'amazon prime video', 'amazon prime'],
+        'e': "🎬 **Amazon Prime Video:**\n\n🔹 **What it is:** Amazon's premium on-demand video streaming platform offering blockbuster movies, hit TV shows, sports broadcasts, and Prime Originals.\n🔹 **Popular Series:** The Boys, The Rings of Power, Reacher, Mirzapur, The Family Man.\n🔹 **Access:** Included with Amazon Prime membership.",
+        'h': "🎬 **Amazon Prime Video:**\n\n🔹 **Kya hai:** Amazon ka streaming app hai jahan movies aur hit web series (The Boys, Mirzapur, Family Man) milti hain."
+    },
+    'disney+': {
+        'aliases': ['disney+', 'disney plus', 'disney'],
+        'e': "🏰 **Disney+:**\n\n🔹 **What it is:** The official home for streaming content from Disney, Pixar, Marvel, Star Wars, and National Geographic.\n🔹 **Key Franchises:** Marvel Cinematic Universe, Star Wars (The Mandalorian), Disney Animated Classics, and Pixar movies.",
+        'h': "🏰 **Disney+ (Hotstar):**\n\n🔹 **Kya hai:** Disney ka official streaming service hai jahan Marvel, Star Wars, Pixar aur Disney ke animations milte hain."
+    },
+    'max': {
+        'aliases': ['max', 'hbo max', 'hbo'],
+        'e': "📺 **Max (formerly HBO Max):**\n\n🔹 **What it is:** Warner Bros. Discovery's premium streaming platform featuring HBO's critically acclaimed television series, Warner Bros. movies, and DC Universe films.\n🔹 **Famous Titles:** Game of Thrones, House of the Dragon, Succession, The Last of Us.",
+        'h': "📺 **Max (HBO Max):**\n\n🔹 **Kya hai:** Warner Bros aur HBO ka OTT platform hai jo Game of Thrones, House of the Dragon aur DC movies ke liye famous hai."
+    },
+    'spotify': {
+        'aliases': ['spotify'],
+        'e': "🎧 **Spotify:**\n\n🔹 **What it is:** The world's most popular digital music and podcast streaming service providing access to over 100 Million tracks.\n🔹 **Key Features:** Discover Weekly, Spotify Wrapped, curated algorithmic playlists, podcasts, and audiobooks.\n🔹 **Scale:** Over 600 Million monthly active listeners!",
+        'h': "🎧 **Spotify:**\n\n🔹 **Kya hai:** Duniya ka sabse bada music aur podcast streaming app hai jahan 100 Million se zyada songs aur personal playlists milti hain!"
+    },
+    'youtube music': {
+        'aliases': ['youtube music', 'yt music'],
+        'e': "🎵 **YouTube Music:**\n\n🔹 **What it is:** Google's dedicated music streaming app built directly upon YouTube's massive audio catalog, music videos, and live concert recordings.\n🔹 **Features:** Background play, offline downloads, smart lyric view, and personalized radio stations.",
+        'h': "🎵 **YouTube Music:**\n\n🔹 **Kya hai:** Google ka dedicated music player hai jo YouTube ke audio aur live concert database se connected hai."
+    },
+    'candy crush saga': {
+        'aliases': ['candy crush', 'candy crush saga'],
+        'e': "🍬 **Candy Crush Saga:**\n\n🔹 **What it is:** A legendary match-three puzzle video game developed by King, remaining one of the highest-grossing mobile games for over a decade.\n🔹 **Gameplay:** Swap colored candies on a game board to match three or more of the same color and clear objectives across thousands of levels.",
+        'h': "🍬 **Candy Crush Saga:**\n\n🔹 **Kya hai:** King company ka banaya match-3 puzzle game hai jahan same color ki candies match karke levels paar karte hain!"
+    },
+    'roblox': {
+        'aliases': ['roblox'],
+        'e': "🧱 **Roblox:**\n\n🔹 **What it is:** An online gaming platform and game creation system that allows users to program games and play worlds created by other users using the Lua programming language.\n🔹 **Scale:** Over 70 Million daily active players worldwide!",
+        'h': "🧱 **Roblox:**\n\n🔹 **Kya hai:** Ek gaming platform hai jahan players doosre logon ke banaye hue hazaron virtual games khelte hain ya khud game design karte hain (Lua code se)."
+    },
+    'minecraft': {
+        'aliases': ['minecraft', 'mc'],
+        'e': "⛏️ **Minecraft:**\n\n🔹 **What it is:** The best-selling video game of all time (300M+ copies), developed by Mojang Studios (Microsoft), featuring a 3D blocky procedural sandbox world.\n🔹 **Modes:** Survival (fight mobs, mine, craft) and Creative (unlimited building blocks).\n🔹 **Note:** Housie AI's wallpaper is inspired by the gorgeous Minecraft movie world! 🌲⛏️",
+        'h': "⛏️ **Minecraft:**\n\n🔹 **Kya hai:** Duniya ka sabse famous 3D block sandbox game jahan aap building, crafting aur mining karte ho! Housie ka background bhi Minecraft se inspired hai."
+    },
+    'pubg mobile': {
+        'aliases': ['pubg', 'pubg mobile', 'bgmi'],
+        'e': "🔫 **PUBG Mobile (Battlegrounds Mobile):**\n\n🔹 **What it is:** A premier multiplayer battle royale shooter game where 100 players parachute onto an island and fight to be the last person or squad standing.\n🔹 **Developer:** Lightspeed & Quantum Studio / Krafton.",
+        'h': "🔫 **PUBG Mobile / BGMI:**\n\n🔹 **Kya hai:** 100 players ka battle royale shooter game jahan island par land karke weapons loot kar last survival tak ladte hain! 'Winner Winner Chicken Dinner'!"
+    },
+    'geometry dash': {
+        'aliases': ['geometry dash'],
+        'e': "🔺 **Geometry Dash:**\n\n🔹 **What it is:** A rhythm-based action platformer video game developed by RobTop Games known for its energetic electronic soundtrack and challenging obstacle levels.",
+        'h': "🔺 **Geometry Dash:**\n\n🔹 **Kya hai:** Ek rhythm-based jumping platformer game hai jahan music ki beat par obstacles aur spikes se bachna hota hai."
+    },
+    'stardew valley': {
+        'aliases': ['stardew valley', 'stardew'],
+        'e': "🌾 **Stardew Valley:**\n\n🔹 **What it is:** An acclaimed open-ended country-life farming simulation RPG developed by ConcernedApe (Eric Barone), where players rebuild their grandfather's overgrown farm.",
+        'h': "🌾 **Stardew Valley:**\n\n🔹 **Kya hai:** Ek peaceful farming RPG game hai jahan kheti, janwar paalna, mining aur gaon ke logon se dosti karke farm banate hain."
+    },
+    'block blast': {
+        'aliases': ['block blast'],
+        'e': "🧩 **Block Blast:**\n\n🔹 **What it is:** A viral, offline puzzle game where players place various geometric shapes onto an 8x8 grid to form and clear complete horizontal and vertical lines.",
+        'h': "🧩 **Block Blast:**\n\n🔹 **Kya hai:** Ek addictive block puzzle game hai jisme grid par blocks fit karke rows aur columns clear karni hoti hain."
+    },
+    'messenger': {
+        'aliases': ['messenger', 'facebook messenger', 'fb messenger'],
+        'e': "💬 **Messenger:**\n\n🔹 **What it is:** Meta's standalone instant messaging app spun off from Facebook, supporting text chats, audio/video calls, and cross-platform messaging with Instagram.",
+        'h': "💬 **Messenger:**\n\n🔹 **Kya hai:** Facebook ka dedicated chat app hai jo free text, video calling aur group chats ke liye use hota hai."
+    },
+    'google gemini': {
+        'aliases': ['gemini', 'google gemini', 'bard'],
+        'e': "✨ **Google Gemini:**\n\n🔹 **What it is:** Google's multimodal AI assistant powered by Gemini large language models, designed to understand text, code, audio, image, and video inputs to assist with learning, coding, and planning.",
+        'h': "✨ **Google Gemini:**\n\n🔹 **Kya hai:** Google ka advanced multimodal AI model hai jo text, images, aur coding sab kuch samajh kar answers deta hai."
+    },
+    'claude': {
+        'aliases': ['claude', 'anthropic'],
+        'e': "🧠 **Claude:**\n\n🔹 **What it is:** A next-generation AI assistant developed by Anthropic, engineered for safe, helpful, and nuanced analysis, coding, and complex reasoning across large documents.",
+        'h': "🧠 **Claude:**\n\n🔹 **Kya hai:** Anthropic company ka AI assistant hai jo coding, research aur reasoning ke liye bahut accurate aur smart mana jaata hai."
+    },
+    'microsoft teams': {
+        'aliases': ['teams', 'microsoft teams', 'ms teams'],
+        'e': "🏢 **Microsoft Teams:**\n\n🔹 **What it is:** A enterprise collaboration workspace combining video meetings, workplace chat, file sharing, and Office 365 app integrations.",
+        'h': "🏢 **Microsoft Teams:**\n\n🔹 **Kya hai:** Microsoft ka corporate communication app hai jo video conferences, office chats aur file sharing ke liye use hota hai."
+    },
+    'microsoft authenticator': {
+        'aliases': ['microsoft authenticator', 'authenticator'],
+        'e': "🔐 **Microsoft Authenticator:**\n\n🔹 **What it is:** A security application that provides two-factor authentication (2FA) and passwordless phone sign-ins to safeguard online accounts against unauthorized access.",
+        'h': "🔐 **Microsoft Authenticator:**\n\n🔹 **Kya hai:** 2-Factor Authentication (2FA) security app hai jo accounts ko hacker se bachane ke liye security code generate karta hai."
+    },
+    'threads': {
+        'aliases': ['threads', 'meta threads'],
+        'e': "🧵 **Threads:**\n\n🔹 **What it is:** A text-focused microblogging platform built by the Instagram team at Meta, designed for public conversations and real-time updates as a competitor to X.",
+        'h': "🧵 **Threads:**\n\n🔹 **Kya hai:** Instagram (Meta) ka text-based microblogging app hai jo X (Twitter) ki tarah thoughts share karne ke liye bana hai."
+    },
+    'zoom': {
+        'aliases': ['zoom'],
+        'e': "📹 **Zoom:**\n\n🔹 **What it is:** A cloud-based video communications app offering HD video conferencing, virtual webinars, breakout rooms, and remote screen sharing.",
+        'h': "📹 **Zoom:**\n\n🔹 **Kya hai:** Online video meetings, webinars aur school classes ke liye sabse zyada use hone wala video calling platform hai."
+    },
+    'aliexpress': {
+        'aliases': ['aliexpress', 'ali express'],
+        'e': "📦 **AliExpress:**\n\n🔹 **What it is:** An online retail marketplace owned by Alibaba Group, connecting international buyers directly to manufacturers and small businesses in China for low-cost goods.",
+        'h': "📦 **AliExpress:**\n\n🔹 **Kya hai:** Alibaba ka global shopping app hai jahan Chinese manufacturers se direct saste daam par samaan mangwaya jaata hai."
+    },
+    'shein': {
+        'aliases': ['shein'],
+        'e': "👗 **Shein:**\n\n🔹 **What it is:** A fast-fashion e-commerce giant renowned for affordable, on-trend apparel, accessories, and rapid catalog updates driven by algorithmic trend analysis.",
+        'h': "👗 **Shein:**\n\n🔹 **Kya hai:** World-famous fast-fashion shopping app hai jo trendy kapde aur accessories saste rates mein bechta hai."
+    },
+    'pinterest': {
+        'aliases': ['pinterest'],
+        'e': "📌 **Pinterest:**\n\n🔹 **What it is:** A visual bookmarking discovery engine where users collect, curate, and share ideas for recipes, interior design, fashion, and DIY projects on virtual 'Boards'.",
+        'h': "📌 **Pinterest:**\n\n🔹 **Kya hai:** Visual ideas aur photo inspiration ka search engine hai jahan recipes, fashion aur home design ke pins save karte hain."
+    },
+    'x (formerly twitter)': {
+        'aliases': ['x', 'twitter', 'tweet'],
+        'e': "🐦 **X (formerly Twitter):**\n\n🔹 **What it is:** A real-time global microblogging social network owned by Elon Musk, centered on public conversations, breaking news, threads, and Spaces audio rooms.",
+        'h': "🐦 **X (Twitter):**\n\n🔹 **Kya hai:** Elon Musk ka microblogging platform jahan breaking news, tweets aur viral debates hoti hain."
+    },
+    'canva': {
+        'aliases': ['canva'],
+        'e': "🎨 **Canva:**\n\n🔹 **What it is:** A user-friendly online graphic design platform offering thousands of customizable templates for social media posts, presentations, posters, and logos.",
+        'h': "🎨 **Canva:**\n\n🔹 **Kya hai:** Bina professional editing seekhe posters, YouTube thumbnails, resumes aur social media graphics banane ka aasan design tool hai."
+    },
+    'subway surfers': {
+        'aliases': ['subway surfers', 'subway surfer'],
+        'e': "🛹 **Subway Surfers:**\n\n🔹 **What it is:** The world's most downloaded endless runner mobile game (by SYBO Games), where players run along train tracks dodging oncoming trains and the Grumpy Inspector.",
+        'h': "🛹 **Subway Surfers:**\n\n🔹 **Kya hai:** All-time hit endless running game jahan trains par bhaag kar coins collect karte hain aur inspector se bachte hain!"
+    },
+    'amazon shopping': {
+        'aliases': ['amazon', 'amazon shopping'],
+        'e': "📦 **Amazon:**\n\n🔹 **What it is:** The world's largest online e-commerce retailer offering millions of products with fast delivery via Amazon Prime, customer reviews, and secure checkout.",
+        'h': "📦 **Amazon:**\n\n🔹 **Kya hai:** Jeff Bezos dwara shuru ki gayi duniya ki sabse badi shopping website aur app hai jahan electronics se le kar rashan sab milta hai."
+    },
+    'phonepe': {
+        'aliases': ['phonepe', 'phone pe'],
+        'e': "📱 **PhonePe:**\n\n🔹 **What it is:** India's leading digital payments and financial technology platform powered by UPI, enabling instant money transfers, utility bill payments, recharges, and gold investments.",
+        'h': "📱 **PhonePe:**\n\n🔹 **Kya hai:** India ka sabse bada UPI payment app hai jisse QR code scan karke paise bheje jaate hain aur bills pay hote hain."
+    },
+    'meesho': {
+        'aliases': ['meesho'],
+        'e': "🛍️ **Meesho:**\n\n🔹 **What it is:** An Indian social commerce marketplace that connects small manufacturers directly with consumers and resellers at zero commission.",
+        'h': "🛍️ **Meesho:**\n\n🔹 **Kya hai:** India ka popular e-commerce app hai jo kapde aur gharelu samaan bahut saste daam par bechta hai."
+    },
+    'google maps': {
+        'aliases': ['google maps', 'maps', 'gmaps'],
+        'e': "🗺️ **Google Maps:**\n\n🔹 **What it is:** A web mapping platform offering satellite imagery, real-time traffic updates, turn-by-turn GPS voice navigation, and local business discoverability.",
+        'h': "🗺️ **Google Maps:**\n\n🔹 **Kya hai:** Google ka GPS navigation app jo raaste, live traffic aur dukaano ki location batata hai."
+    },
+    'google chrome': {
+        'aliases': ['chrome', 'google chrome'],
+        'e': "🌐 **Google Chrome:**\n\n🔹 **What it is:** The world's most widely used web browser developed by Google, known for its speed, cross-device sync, and rich web extension ecosystem.",
+        'h': "🌐 **Google Chrome:**\n\n🔹 **Kya hai:** Google ka fast aur secure internet browser jo duniya bhar ke 65%+ computers aur mobiles par use hota hai."
+    },
+    'vinted': {
+        'aliases': ['vinted'],
+        'e': "👗 **Vinted:**\n\n🔹 **What it is:** An online peer-to-peer marketplace app for buying, selling, and swapping secondhand clothing, vintage items, and fashion accessories.",
+        'h': "👗 **Vinted:**\n\n🔹 **Kya hai:** Purane aur pre-loved kapde bechne aur khareedne ka popular secondhand marketplace app hai."
+    },
+    'reelshort': {
+        'aliases': ['reelshort', 'reel short'],
+        'e': "📱 **ReelShort:**\n\n🔹 **What it is:** A next-gen HD vertical streaming platform specializing in bite-sized, 1-2 minute dramatic episode series tailored for mobile screens.",
+        'h': "📱 **ReelShort:**\n\n🔹 **Kya hai:** 1-2 minute ke vertical drama aur short episodes dekhne ka trending mobile streaming app hai."
+    },
+    'free fire max': {
+        'aliases': ['free fire', 'free fire max', 'ff'],
+        'e': "🔥 **Free Fire MAX:**\n\n🔹 **What it is:** An upgraded, graphically enhanced version of Garena Free Fire featuring fast-paced 50-player battle royale matches lasting ~10 minutes.",
+        'h': "🔥 **Free Fire MAX:**\n\n🔹 **Kya hai:** Garena ka ultra-popular battle royale game jisme 50 players parachute se land karke 10 minute mein survive karte hain."
+    },
+    'ludo king': {
+        'aliases': ['ludo king', 'ludo'],
+        'e': "🎲 **Ludo King:**\n\n🔹 **What it is:** A record-breaking Indian digital adaptation of the traditional board game Ludo, developed by Gametion Technologies with multiplayer online support.",
+        'h': "🎲 **Ludo King:**\n\n🔹 **Kya hai:** Traditional desi Ludo board game ka digital multiplayer version jo doston ke saath online khela jaata hai."
+    },
+    'doordash': {
+        'aliases': ['doordash', 'door dash'],
+        'e': "🍔 **DoorDash:**\n\n🔹 **What it is:** The largest on-demand food delivery platform in North America, connecting customers with local eateries and convenience stores via freelance Dasher couriers.",
+        'h': "🍔 **DoorDash:**\n\n🔹 **Kya hai:** America ka sabse bada food delivery app jo restaurants se khana order karke ghar tak deliver karta hai."
+    },
+    'uber eats': {
+        'aliases': ['uber eats', 'ubereats'],
+        'e': "🍕 **Uber Eats:**\n\n🔹 **What it is:** Uber's dedicated on-demand food delivery subsidiary leveraging its existing global driver infrastructure to deliver restaurant meals and groceries.",
+        'h': "🍕 **Uber Eats:**\n\n🔹 **Kya hai:** Uber ka food ordering app jo local restaurants se tasty khana deliver karta hai."
+    },
+    'discord': {
+        'aliases': ['discord'],
+        'e': "🎧 **Discord:**\n\n🔹 **What it is:** A voice, video, and text communication platform structured into invite-only servers with topic channels, immensely popular among gamers, programmers, and communities.",
+        'h': "🎧 **Discord:**\n\n🔹 **Kya hai:** Gamers aur communities ka favorite voice aur text chat platform hai jahan custom servers aur bots hote hain."
+    },
+    'reddit': {
+        'aliases': ['reddit'],
+        'e': "👽 **Reddit:**\n\n🔹 **What it is:** The 'front page of the internet' — a massive network of user-curated communities ('subreddits') where people discuss hobbies, share news, and upvote content.",
+        'h': "👽 **Reddit:**\n\n🔹 **Kya hai:** Internet ka sabse bada discussion forum jahan har topic par communities (subreddits) bani hoti hain."
+    },
+    'tinder': {
+        'aliases': ['tinder'],
+        'e': "🔥 **Tinder:**\n\n🔹 **What it is:** The pioneer location-based mobile dating app that revolutionized modern matchmaking with its intuitive 'Swipe Right' to like and 'Swipe Left' to pass mechanics.",
+        'h': "🔥 **Tinder:**\n\n🔹 **Kya hai:** Location-based online dating app hai jo 'Swipe Right' feature se logon ko date aur connect karwata hai."
+    },
+    'bumble': {
+        'aliases': ['bumble'],
+        'e': "🐝 **Bumble:**\n\n🔹 **What it is:** A dating and networking app designed to empower women by requiring female users to initiate the conversation first in heterosexual matches.",
+        'h': "🐝 **Bumble:**\n\n🔹 **Kya hai:** Ek dating app hai jahan ladkiyon ko pehla message bhejna compulsory hota hai."
+    },
+    'hinge': {
+        'aliases': ['hinge'],
+        'e': "💘 **Hinge:**\n\n🔹 **What it is:** A relationship-focused dating app that brands itself as 'designed to be deleted', encouraging meaningful connections through rich user profile prompts.",
+        'h': "💘 **Hinge:**\n\n🔹 **Kya hai:** Long-term serious relationships ke liye banaya gaya dating app jo 'Designed to be deleted' slogan par chalta hai."
+    },
+    'airbnb': {
+        'aliases': ['airbnb'],
+        'e': "🏡 **Airbnb:**\n\n🔹 **What it is:** A global hospitality marketplace connecting travelers looking for unique short-term stays, vacation villas, and local experiences with residential hosts.",
+        'h': "🏡 **Airbnb:**\n\n🔹 **Kya hai:** Hotel ke bajaye logon ke ghar, villas aur rooms rent par book karne ka world-famous travel app hai."
+    },
+    'booking.com': {
+        'aliases': ['booking.com', 'booking'],
+        'e': "🏨 **Booking.com:**\n\n🔹 **What it is:** A major digital travel fare aggregator allowing travelers to search, compare, and reserve hotels, flight tickets, holiday packages, and rental cars.",
+        'h': "🏨 **Booking.com:**\n\n🔹 **Kya hai:** Flights, hotels aur resort booking ka sabse reliable international travel app hai."
+    },
+    'venmo': {
+        'aliases': ['venmo'],
+        'e': "💸 **Venmo:**\n\n🔹 **What it is:** A social peer-to-peer payment app owned by PayPal, popular in the US for splitting dinner bills, paying rent, and sharing payment activity with emojis.",
+        'h': "💸 **Venmo:**\n\n🔹 **Kya hai:** America mein doston ke beech bill split karne aur instant paise bhejne ka social payment app hai."
+    },
+    'paypal': {
+        'aliases': ['paypal', 'pay pal'],
+        'e': "💳 **PayPal:**\n\n🔹 **What it is:** A pioneer global digital wallet and online payment system supporting secure transactions, currency conversions, and fraud protection worldwide.",
+        'h': "💳 **PayPal:**\n\n🔹 **Kya hai:** Worldwide international online payments aur money transfer ka sabse trusted digital wallet hai."
+    },
+    'zelle': {
+        'aliases': ['zelle'],
+        'e': "🏦 **Zelle:**\n\n🔹 **What it is:** A direct bank-to-bank peer-to-peer payment network integrated into thousands of US financial institutions for zero-fee, instant money transfers.",
+        'h': "🏦 **Zelle:**\n\n🔹 **Kya hai:** US bank accounts ke beech bina kisi fee ke direct paise transfer karne ka fast payment network hai."
+    },
+    'robinhood': {
+        'aliases': ['robinhood'],
+        'e': "📈 **Robinhood:**\n\n🔹 **What it is:** A trailblazing financial services app that pioneered zero-commission stock, ETF, options, and cryptocurrency trading for everyday retail investors.",
+        'h': "📈 **Robinhood:**\n\n🔹 **Kya hai:** Commission-free stock market aur crypto trading app hai jo mobile par trading ko aasan banata hai."
+    },
+    'coinbase': {
+        'aliases': ['coinbase'],
+        'e': "🪙 **Coinbase:**\n\n🔹 **What it is:** A leading publicly traded cryptocurrency exchange platform providing a secure interface to buy, sell, convert, and store digital assets like Bitcoin and Ethereum.",
+        'h': "🪙 **Coinbase:**\n\n🔹 **Kya hai:** Bitcoin, Ethereum aur crypto khareedne aur bechne ka sabse secure global exchange hai."
+    },
+    'slack': {
+        'aliases': ['slack'],
+        'e': "💼 **Slack:**\n\n🔹 **What it is:** A business communication hub owned by Salesforce, organizing team messaging into dedicated channels, direct messages, voice huddles, and tool integrations.",
+        'h': "💼 **Slack:**\n\n🔹 **Kya hai:** Companies aur startups ka workplace chat platform jahan team channels aur workflow automation hoti hai."
+    },
+    'notion': {
+        'aliases': ['notion'],
+        'e': "📝 **Notion:**\n\n🔹 **What it is:** A versatile all-in-one productivity workspace combining markdown note-taking, Kanban boards, relational databases, wikis, and AI writing tools.",
+        'h': "📝 **Notion:**\n\n🔹 **Kya hai:** Notes lene, project manage karne, tables banane aur life organize karne ka ultimate all-in-one workspace app hai."
+    },
+    'google drive': {
+        'aliases': ['google drive', 'gdrive'],
+        'e': "☁️ **Google Drive:**\n\n🔹 **What it is:** Google's cloud storage and file synchronization service providing 15GB of free storage with deep integration into Docs, Sheets, and Slides.",
+        'h': "☁️ **Google Drive:**\n\n🔹 **Kya hai:** Google ka cloud storage app jahan aap photos, videos aur documents online safe rakh sakte hain."
+    },
+    'apple music': {
+        'aliases': ['apple music'],
+        'e': "🍎 **Apple Music:**\n\n🔹 **What it is:** Apple's premium ad-free audio streaming service offering over 100 Million lossless songs, Spatial Audio with Dolby Atmos, and curated Apple Music 1 radio.",
+        'h': "🍎 **Apple Music:**\n\n🔹 **Kya hai:** Apple ka premium ad-free music app jo high-resolution lossless audio aur Dolby Atmos sound deliver karta hai."
+    },
+    'soundcloud': {
+        'aliases': ['soundcloud', 'sound cloud'],
+        'e': "☁️ **SoundCloud:**\n\n🔹 **What it is:** An online open audio distribution platform that allows independent artists, DJs, and podcasters to directly upload, share, and promote their original tracks.",
+        'h': "☁️ **SoundCloud:**\n\n🔹 **Kya hai:** Independent singers, DJs aur rappers ka music sharing platform jahan unreleased songs aur remixes milte hain."
+    },
+    'shazam': {
+        'aliases': ['shazam'],
+        'e': "🎵 **Shazam:**\n\n🔹 **What it is:** An audio recognition app owned by Apple that listens through your device microphone and identifies the exact song, artist, and album in seconds.",
+        'h': "🎵 **Shazam:**\n\n🔹 **Kya hai:** Ek aisa magic app jo aas-paas baj rahe kisi bhi gaane ko sun kar uska naam aur artist 2 second mein bata deta hai!"
+    },
+    'twitch': {
+        'aliases': ['twitch'],
+        'e': "🎮 **Twitch:**\n\n🔹 **What it is:** Amazon's live streaming titan focused primarily on video game broadcasts, esports tournaments, creative streams, and live creator-audience chats.",
+        'h': "🎮 **Twitch:**\n\n🔹 **Kya hai:** Video game live streaming aur esports matches dekhne ka duniya ka sabse bada live video platform hai."
+    },
+    'hulu': {
+        'aliases': ['hulu'],
+        'e': "📺 **Hulu:**\n\n🔹 **What it is:** A major US streaming service owned by Disney, hosting current-season TV episodes shortly after network broadcast along with award-winning original dramas.",
+        'h': "📺 **Hulu:**\n\n🔹 **Kya hai:** America ka famous streaming app jahan latest TV episodes aur original movies milti hain."
+    },
+    'crunchyroll': {
+        'aliases': ['crunchyroll'],
+        'e': "🍥 **Crunchyroll:**\n\n🔹 **What it is:** The premier international streaming platform dedicated exclusively to Japanese anime, manga, and Asian drama series with simulcasts directly from Japan.",
+        'h': "🍥 **Crunchyroll:**\n\n🔹 **Kya hai:** Anime lovers ka jannat — Naruto, One Piece, Attack on Titan jaise hit Japanese anime shows dekhne ka official app hai!"
+    },
+    'zomato': {
+        'aliases': ['zomato'],
+        'e': "🍕 **Zomato:**\n\n🔹 **What it is:** A multinational restaurant aggregator and food delivery company based in India, offering restaurant discovery, table reservations, and doorstep food delivery.",
+        'h': "🍕 **Zomato:**\n\n🔹 **Kya hai:** India ka leading online food ordering app jahan se aap apne favorite restaurants se khana order kar sakte hain."
+    },
+    'swiggy': {
+        'aliases': ['swiggy'],
+        'e': "🛵 **Swiggy:**\n\n🔹 **What it is:** An Indian on-demand delivery super-app offering restaurant food delivery, quick-commerce grocery deliveries via Instamart, and package pickup via Genie.",
+        'h': "🛵 **Swiggy:**\n\n🔹 **Kya hai:** India ka instant delivery app jahan se khana (Food Delivery) aur 10 minute mein groceries (Instamart) aati hain."
+    },
+    'instacart': {
+        'aliases': ['instacart'],
+        'e': "🛒 **Instacart:**\n\n🔹 **What it is:** A leading North American grocery delivery and pickup service that connects customers with personal shoppers to hand-select and deliver items from local supermarkets.",
+        'h': "🛒 **Instacart:**\n\n🔹 **Kya hai:** Grocery shopping app jahan personal shoppers supermarket se samaan le kar aapke ghar deliver karte hain."
+    },
+    'lyft': {
+        'aliases': ['lyft'],
+        'e': "🚗 **Lyft:**\n\n🔹 **What it is:** A prominent North American ride-hailing app providing on-demand car rides, motorized scooters, bike-sharing systems, and rental car reservations.",
+        'h': "🚗 **Lyft:**\n\n🔹 **Kya hai:** Uber ka sabse bada competitor ride-sharing app jo America aur Canada mein cabs book karta hai."
+    },
+    'waze': {
+        'aliases': ['waze'],
+        'e': "🚦 **Waze:**\n\n🔹 **What it is:** A community-powered GPS navigation app owned by Google that uses crowdsourced real-time reports to alert drivers of police traps, accidents, speed cameras, and road hazards.",
+        'h': "🚦 **Waze:**\n\n🔹 **Kya hai:** Google ka community-based GPS navigation app jo live road hazards, police traps aur accidents ki alert deta hai."
+    },
+    'google translate': {
+        'aliases': ['google translate', 'translate'],
+        'e': "🌐 **Google Translate:**\n\n🔹 **What it is:** Google's neural machine translation service capable of translating text, spoken voice, handwriting, and live camera images across over 130 languages.",
+        'h': "🌐 **Google Translate:**\n\n🔹 **Kya hai:** Kisi bhi bhasha ko doosri bhasha mein translate karne ka app — text, voice aur camera photo sab translate karta hai!"
+    },
+    'signal': {
+        'aliases': ['signal', 'signal app'],
+        'e': "🔒 **Signal:**\n\n🔹 **What it is:** A non-profit, open-source encrypted communication app heralded as the gold standard in privacy, employing zero metadata tracking and the Signal Protocol.",
+        'h': "🔒 **Signal:**\n\n🔹 **Kya hai:** Duniya ka sabse secure aur private messaging app jahan zero user tracking aur top-tier encryption hoti hai."
+    },
+    'viber': {
+        'aliases': ['viber'],
+        'e': "📞 **Viber:**\n\n🔹 **What it is:** A cross-platform VoIP and instant messaging app owned by Rakuten, enabling free audio/video calling, group chats, and Viber Out international calls.",
+        'h': "📞 **Viber:**\n\n🔹 **Kya hai:** Free internet voice aur video calls karne ka popular messaging app jo Rakuten company ka hai."
+    },
+    'line': {
+        'aliases': ['line app', 'line messenger'],
+        'e': "🐻 **Line:**\n\n🔹 **What it is:** Japan's dominant messaging super-app featuring instant messaging, voice/video calls, LINE Pay, gaming, and iconic sticker characters (LINE Friends).",
+        'h': "🐻 **Line:**\n\n🔹 **Kya hai:** Japan aur Taiwan ka sabse bada messaging app jo cute stickers aur mobile payments ke liye jaana jaata hai."
+    },
+    'wechat': {
+        'aliases': ['wechat', 'we chat'],
+        'e': "🇨🇳 **WeChat (Weixin):**\n\n🔹 **What it is:** Tencent's ubiquitous Chinese 'app for everything', integrating messaging, social feeds (Moments), digital payments (WeChat Pay), ride-hailing, and mini-programs for over 1.3 Billion users.",
+        'h': "🇨🇳 **WeChat:**\n\n🔹 **Kya hai:** China ka 'Super App' jisme chat, payments, shopping, tickets aur government services sab ek hi app mein hoti hain!"
+    },
+    'goodreads': {
+        'aliases': ['goodreads'],
+        'e': "📚 **Goodreads:**\n\n🔹 **What it is:** An Amazon-owned social cataloging platform for book lovers to track reading goals, write reviews, explore user ratings, and get personalized book recommendations.",
+        'h': "📚 **Goodreads:**\n\n🔹 **Kya hai:** Kitabein padhne walon ka social network jahan book reviews, ratings aur reading challenges track hote hain."
+    },
+    'audible': {
+        'aliases': ['audible'],
+        'e': "🎧 **Audible:**\n\n🔹 **What it is:** Amazon's world-leading audiobook and spoken-word entertainment service offering hundreds of thousands of professionally narrated books and exclusive podcasts.",
+        'h': "🎧 **Audible:**\n\n🔹 **Kya hai:** Amazon ka audiobook app jahan kitabein padhne ke bajaye suni jaati hain!"
+    },
+    'myfitnesspal': {
+        'aliases': ['myfitnesspal', 'my fitness pal'],
+        'e': "🥗 **MyFitnessPal:**\n\n🔹 **What it is:** A premier health and wellness app featuring an extensive food nutrition database to log daily meals, track macronutrients, monitor calories, and achieve weight goals.",
+        'h': "🥗 **MyFitnessPal:**\n\n🔹 **Kya hai:** Diet aur calorie tracking app jo batata hai ki aapne din bhar mein kitna protein, carbs aur calories khayi hain."
+    },
+    'strava': {
+        'aliases': ['strava'],
+        'e': "🏃‍♂️ **Strava:**\n\n🔹 **What it is:** A fitness tracking app and social network for runners, cyclists, and athletes that records GPS route maps, elevation gain, heart rate metrics, and competitive segment leaderboards.",
+        'h': "🏃‍♂️ **Strava:**\n\n🔹 **Kya hai:** Runners aur cyclists ka GPS fitness tracking app jo distance, speed aur route maps track karta hai."
+    },
+    'flo': {
+        'aliases': ['flo', 'flo app'],
+        'e': "🌸 **Flo:**\n\n🔹 **What it is:** An AI-powered women's health and wellbeing app used by over 300 Million women to track menstrual cycles, ovulation windows, pregnancy development, and symptoms.",
+        'h': "🌸 **Flo:**\n\n🔹 **Kya hai:** Women's health app jo menstrual cycle, ovulation aur pregnancy tracking mein madad karta hai."
+    },
+    'calm': {
+        'aliases': ['calm', 'calm app'],
+        'e': "🧘 **Calm:**\n\n🔹 **What it is:** A leading mental wellness software application designed to reduce anxiety, enhance sleep quality, and foster mindfulness through guided meditations, breathing exercises, and Sleep Stories.",
+        'h': "🧘 **Calm:**\n\n🔹 **Kya hai:** Stress relief, dhyan (meditation) aur achhi neend ke liye soothing sounds aur sleep stories sunane wala app."
+    },
+    'headspace': {
+        'aliases': ['headspace'],
+        'e': "🧠 **Headspace:**\n\n🔹 **What it is:** A digital health platform providing scientifically backed mindfulness exercises, guided meditation courses, focus music, and sleep coaching to build lifelong healthy mental habits.",
+        'h': "🧠 **Headspace:**\n\n🔹 **Kya hai:** Meditation aur mindfulness seekhne ka app jo dimaag ko shaant aur focused rakhne mein help karta hai."
+    },
+    'trello': {
+        'aliases': ['trello'],
+        'e': "📋 **Trello:**\n\n🔹 **What it is:** A visual project management tool by Atlassian based on the Japanese Kanban methodology, organizing tasks into visual Boards, Lists, and Cards for intuitive workflow tracking.",
+        'h': "📋 **Trello:**\n\n🔹 **Kya hai:** Kanban boards par tasks aur projects organize karne ka visual task management app hai."
+    },
+    'asana': {
+        'aliases': ['asana'],
+        'e': "📊 **Asana:**\n\n🔹 **What it is:** An enterprise work management platform designed to help teams coordinate, track, and execute collaborative projects with Gantt timelines, task dependencies, and milestone goals.",
+        'h': "📊 **Asana:**\n\n🔹 **Kya hai:** Teams aur companies ke project management, deadlines aur task tracking ka professional tool hai."
+    },
+    'dropbox': {
+        'aliases': ['dropbox'],
+        'e': "📁 **Dropbox:**\n\n🔹 **What it is:** A cloud storage and file synchronization service that keeps files seamlessly updated across desktop and mobile devices with smart sharing links and document backup.",
+        'h': "📁 **Dropbox:**\n\n🔹 **Kya hai:** Files, documents aur photos ko cloud par sync aur share karne ka pioneer cloud storage app."
+    },
+    'evernote': {
+        'aliases': ['evernote'],
+        'e': "🐘 **Evernote:**\n\n🔹 **What it is:** A comprehensive note-taking and archiving app that allows users to capture formatted notes, audio clips, web page clippings, and digitized handwritten documents.",
+        'h': "🐘 **Evernote:**\n\n🔹 **Kya hai:** Digital notes lene, web articles clip karne aur documents organize karne ka classic note app."
+    },
+    'adobe lightroom': {
+        'aliases': ['lightroom', 'adobe lightroom'],
+        'e': "📸 **Adobe Lightroom:**\n\n🔹 **What it is:** A cloud-based photo editing and color grading powerhouse from Adobe, offering RAW image processing, color curves, selective adjustments, and professional photography presets.",
+        'h': "📸 **Adobe Lightroom:**\n\n🔹 **Kya hai:** Adobe ka professional photo editor jo color grading, lighting adjustment aur presets ke liye best hai."
+    },
+    'vsco': {
+        'aliases': ['vsco'],
+        'e': "🎞️ **VSCO:**\n\n🔹 **What it is:** A creative photo and video editing platform acclaimed for its authentic film-emulation filters, grain textures, and distraction-free creator community without public likes or comments.",
+        'h': "🎞️ **VSCO:**\n\n🔹 **Kya hai:** Aesthetic photography app jo vintage film filters aur clean editing tools provide karta hai."
+    },
+    'brave browser': {
+        'aliases': ['brave', 'brave browser'],
+        'e': "🦁 **Brave Browser:**\n\n🔹 **What it is:** A privacy-focused open-source web browser that automatically blocks online intrusive advertisements, cross-site trackers, and fingerprinting by default for 3x faster browsing.",
+        'h': "🦁 **Brave Browser:**\n\n🔹 **Kya hai:** Fast web browser jo bina kisi extension ke sabhi ads aur tracking cookies ko automatically block kar deta hai!"
+    },
+    'duckduckgo': {
+        'aliases': ['duckduckgo', 'ddg'],
+        'e': "🦆 **DuckDuckGo:**\n\n🔹 **What it is:** An internet privacy company providing a secure search engine and web browser that does not profile users, track IP addresses, or store search histories.",
+        'h': "🦆 **DuckDuckGo:**\n\n🔹 **Kya hai:** Privacy-first search engine jo aapki search history aur IP address ko bilkul track ya save nahi karta!"
+    },
+    'nordvpn': {
+        'aliases': ['nordvpn', 'nord vpn'],
+        'e': "🛡️ **NordVPN:**\n\n🔹 **What it is:** A top-tier Virtual Private Network (VPN) security service that encrypts online traffic with AES-256 encryption, hides real IP addresses, and bypasses regional content geo-blocks.",
+        'h': "🛡️ **NordVPN:**\n\n🔹 **Kya hai:** Internet privacy aur security app jo aapke internet traffic ko encrypt karke IP address hide karta hai."
+    },
+    'ring': {
+        'aliases': ['ring app', 'ring doorbell'],
+        'e': "🔔 **Ring:**\n\n🔹 **What it is:** An Amazon-owned smart home security ecosystem offering video doorbells and surveillance cameras with live HD streaming, two-way talk audio, and motion detection alerts.",
+        'h': "🔔 **Ring:**\n\n🔹 **Kya hai:** Smart video doorbell aur home security app jisse aap phone par dekh sakte hain ki darwaze par kaun aaya hai."
+    },
+    'yelp': {
+        'aliases': ['yelp'],
+        'e': "⭐ **Yelp:**\n\n🔹 **What it is:** A crowd-sourced local business review and discovery platform where consumers share reviews, star ratings, photos, and tips on restaurants, bars, and home services.",
+        'h': "⭐ **Yelp:**\n\n🔹 **Kya hai:** Local restaurants, cafes aur services ke customer reviews aur star ratings padhne ka popular app hai."
+    }
+}

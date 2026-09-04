@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Housie AI — Full-Stack Math &amp; Aesthetic Assistant</title>
+  <meta name="description" content="Housie AI — A smart bilingual AI assistant with HD Minecraft background, animated clouds, trigonometry, algebra solver, and ultra-aesthetic liquid glass UI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --accent2: #8b5cf6;
+      --accent3: #ec4899;
+      --teal: #2dd4bf;
+      --text: #ffffff;
+      --text2: rgba(255, 255, 255, 0.92);
+      --text-muted: rgba(255, 255, 255, 0.65);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      overflow: hidden;
+      background: #0f172a;
+    }
+
+    /* ═══════════════════════════════════════════
+       MINECRAFT MOVIE HD LANDSCAPE & MOVING CLOUDS
+    ═══════════════════════════════════════════ */
+    .mc-bg-container {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background: #3b82f6;
+    }
+
+    .mc-bg-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      filter: brightness(0.88) contrast(1.08);
+      transform: scale(1.02);
+    }
+
+    /* Canvas cloud overlay — replaces CSS pseudo-element clouds */
+    #cloud-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ─── 3D BRAIN OVERLAY ─── */
+    #brain-canvas { position: fixed; inset: 0; z-index: 1; opacity: 0.22; pointer-events: none; }
+
+    /* ═══════════════════════════════════════════
+       MAIN LAYOUT
+    ═══════════════════════════════════════════ */
+    #app {
+      position: relative; z-index: 2;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+      padding: 24px 32px;
+    }
+
+    /* ═══════════════════════════════════════════
+       LIQUID GLASS CARDS
+    ═══════════════════════════════════════════ */
+
+    /* ─── ROBOT PANEL (LEFT) ─── */
+    .robot-panel {
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      animation: fadeLeft 0.8s cubic-bezier(0.22,1,0.36,1);
+    }
+    @keyframes fadeLeft { from{opacity:0;transform:translateX(-30px);} to{opacity:1;transform:translateX(0);} }
+
+    .robot-glass {
+      width: 240px;
+      padding: 30px 20px 24px;
+      border-radius: 32px;
+      display: flex; flex-direction: column; align-items: center;
+      position: relative; overflow: visible;
+
+      background: rgba(15, 23, 42, 0.46);
+      backdrop-filter: blur(40px) saturate(200%) brightness(1.05);
+      -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.05);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.12),
+        0 16px 48px rgba(0,0,0,0.5),
+        0 4px 12px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.4),
+        inset 0 -1px 0 rgba(0,0,0,0.25);
+    }
+
+    .robot-glass::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 48%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 100%);
+      border-radius: 32px 32px 0 0;
+      pointer-events: none;
+    }
+
+    /* ─── SVG ROBOT ─── */
+    .robot-body {
+      width: 155px; height: 195px;
+      position: relative;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .robot-body.talking { animation: robotTalk 0.7s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes robotTalk {
+      0%{transform:scale(1) translateY(0);} 20%{transform:scale(1.08) translateY(-10px);}
+      40%{transform:scale(1.02) translateY(-4px) rotate(-3deg);} 60%{transform:scale(1.06) translateY(-7px) rotate(3deg);}
+      80%{transform:scale(1.01) translateY(-2px);} 100%{transform:scale(1) translateY(0);}
+    }
+    .robot-svg { animation: robotIdle 3s ease-in-out infinite; }
+    @keyframes robotIdle { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+
+    .robot-arm-right { transform-origin: 10px 5px; }
+    .robot-body.talking .robot-arm-right { animation: armWave 0.8s ease-in-out; }
+    @keyframes armWave { 0%{transform:rotate(0);} 25%{transform:rotate(-30deg);} 50%{transform:rotate(10deg);} 75%{transform:rotate(-15deg);} 100%{transform:rotate(0);} }
+
+    .robot-name {
+      font-size: 16px; font-weight: 800; color: rgba(255,255,255,0.98);
+      letter-spacing: 1.5px; margin-top: 10px; text-align: center;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .robot-status {
+      font-size: 11px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 6px; font-weight: 500; text-align: center;
+    }
+    .robot-status .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #2dd4bf; box-shadow: 0 0 10px #2dd4bf;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.4;transform:scale(0.8);} }
+
+    /* Speech bubble */
+    .robot-speech {
+      position: absolute; top: -52px; left: 50%;
+      transform: translateX(-50%) scale(0);
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 16px;
+      padding: 8px 16px; font-size: 12px; font-weight: 500;
+      color: rgba(255,255,255,0.98); white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+      opacity: 0; z-index: 10;
+    }
+    .robot-speech::after {
+      content: ''; position: absolute; bottom: -6px; left: 50%;
+      transform: translateX(-50%) rotate(45deg);
+      width: 12px; height: 12px;
+      background: rgba(15, 23, 42, 0.88);
+      border-right: 1px solid rgba(255,255,255,0.3);
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+    }
+    .robot-speech.show { transform: translateX(-50%) scale(1); opacity: 1; }
+
+    /* ═══ RIGHT: CHAT ═══ */
+    .right-panel {
+      display: flex; flex-direction: column; align-items: center;
+      flex: 1; max-width: 740px; height: 90vh; gap: 14px;
+    }
+
+    .header {
+      display: flex; align-items: center; gap: 14px;
+      animation: fadeDown 0.7s cubic-bezier(0.22,1,0.36,1);
+    }
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-20px);} to{opacity:1;transform:translateY(0);} }
+
+    .logo-ring {
+      width: 48px; height: 48px; border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.5), 0 0 0 2px rgba(255,255,255,0.3);
+      position: relative; overflow: hidden;
+    }
+    .logo-ring::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    @keyframes shimmer { 0%{transform:translateX(-100%) rotate(25deg);} 100%{transform:translateX(200%) rotate(25deg);} }
+    .logo-icon { font-size: 24px; position: relative; z-index: 1; }
+
+    .header-text h1 {
+      font-size: 26px; font-weight: 800; letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #ffffff, #a5b4fc, #f472b6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .header-text p { font-size: 11px; color: var(--text-muted); letter-spacing: 1.2px; text-transform: uppercase; font-weight: 600; }
+
+    /* ─── CHAT CONTAINER ─── */
+    .chat-container {
+      width: 100%; flex: 1;
+      position: relative; border-radius: 32px;
+      display: flex; flex-direction: column; overflow: hidden;
+      animation: fadeUp 0.7s cubic-bezier(0.22,1,0.36,1);
+
+      background: rgba(15, 23, 42, 0.46);
+      backdrop-filter: blur(40px) saturate(200%) brightness(1.05);
+      -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.05);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.12),
+        0 16px 52px rgba(0,0,0,0.55),
+        0 24px 64px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.4),
+        inset 0 -1px 0 rgba(0,0,0,0.25);
+    }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(25px);} to{opacity:1;transform:translateY(0);} }
+
+    .chat-container::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 90px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, transparent 100%);
+      border-radius: 32px 32px 0 0;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ─── MESSAGES ─── */
+    .messages {
+      flex: 1; overflow-y: auto;
+      padding: 24px 22px 14px;
+      display: flex; flex-direction: column; gap: 14px;
+      scroll-behavior: smooth;
+      position: relative; z-index: 1;
+    }
+    .messages::-webkit-scrollbar { width: 5px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); border-radius: 10px; }
+
+    /* ─── WELCOME ─── */
+    .welcome { text-align: center; margin: auto; animation: fadeIn 0.8s ease; }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+    .welcome-emoji { font-size: 46px; margin-bottom: 12px; animation: wave 2s ease-in-out infinite; }
+    @keyframes wave { 0%,100%{transform:rotate(0);} 25%{transform:rotate(20deg);} 75%{transform:rotate(-10deg);} }
+    .welcome h2 { font-size: 22px; font-weight: 800; color: rgba(255,255,255,0.98); margin-bottom: 6px; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+    .welcome p { font-size: 13.5px; color: var(--text2); line-height: 1.7; max-width: 390px; margin: 0 auto; }
+
+    .suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+    .chip {
+      padding: 8px 18px;
+      background: rgba(255,255,255,0.13);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 22px; font-size: 12.5px;
+      color: rgba(255,255,255,0.95); cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+      font-weight: 600;
+    }
+    .chip:hover {
+      background: rgba(99,102,241,0.45); border-color: rgba(165,180,252,0.7);
+      color: #fff; transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(99,102,241,0.45);
+    }
+
+    /* ─── MESSAGE ROWS ─── */
+    .msg-row {
+      display: flex; gap: 12px; align-items: flex-start;
+      animation: msgSlide 0.4s cubic-bezier(0.22,1,0.36,1);
+      width: 100%;
+    }
+    .msg-row.user { flex-direction: row-reverse; }
+    @keyframes msgSlide { from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:translateY(0);} }
+
+    .avatar {
+      width: 34px; height: 34px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0; margin-top: 2px;
+    }
+    .avatar.ai { background: linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow: 0 4px 14px rgba(99,102,241,0.45); }
+    .avatar.user { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 14px rgba(245,158,11,0.45); }
+
+    .msg-content { display: flex; flex-direction: column; max-width: 76%; min-width: 0; }
+    .msg-row.user .msg-content { align-items: flex-end; }
+
+    /* ─── GLASS BUBBLES ─── */
+    .bubble {
+      padding: 13px 18px; border-radius: 20px;
+      font-size: 14px; line-height: 1.7;
+      word-wrap: break-word; overflow-wrap: break-word;
+    }
+    .bubble.ai {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-top-left-radius: 5px;
+      color: rgba(255,255,255,0.98);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+    .bubble.user {
+      background: linear-gradient(135deg, rgba(99,102,241,0.88), rgba(139,92,246,0.88));
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-top-right-radius: 5px;
+      color: #fff;
+      box-shadow: 0 4px 22px rgba(99,102,241,0.45);
+    }
+
+    .math-result {
+      display: inline-block;
+      background: rgba(99,102,241,0.28);
+      border: 1.5px solid rgba(165,180,252,0.5);
+      border-radius: 12px;
+      padding: 6px 18px; font-size: 22px; font-weight: 800;
+      color: #a5b4fc; margin-top: 8px; letter-spacing: 0.5px;
+    }
+
+    .timestamp { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 5px; padding: 0 4px; font-weight: 500; }
+
+    /* ─── TYPING ─── */
+    .typing-indicator { display: flex; gap: 5px; align-items: center; padding: 6px 4px; }
+    .typing-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.65); animation: typeBounce 1.4s ease-in-out infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes typeBounce { 0%,80%,100%{transform:translateY(0);opacity:.3;} 40%{transform:translateY(-8px);opacity:1;} }
+
+    /* ─── INPUT AREA ─── */
+    .input-area {
+      padding: 14px 18px 16px;
+      border-top: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      backdrop-filter: blur(20px);
+      display: flex; gap: 12px; align-items: flex-end;
+      position: relative; z-index: 1;
+    }
+    .input-wrapper {
+      flex: 1;
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      display: flex; align-items: center;
+      padding: 0 18px;
+      transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+      min-height: 48px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+    }
+    .input-wrapper:focus-within {
+      border-color: rgba(165,180,252,0.6);
+      background: rgba(255,255,255,0.18);
+      box-shadow: 0 0 0 3px rgba(165,180,252,0.18), inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+    #user-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: #fff; font-size: 14px; font-family: 'Inter', sans-serif;
+      resize: none; padding: 13px 0;
+      max-height: 100px; min-height: 48px; line-height: 1.5;
+    }
+    #user-input::placeholder { color: rgba(255,255,255,0.45); }
+
+    #send-btn {
+      width: 48px; height: 48px; border-radius: 16px; border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+      box-shadow: 0 4px 18px rgba(99,102,241,0.55);
+      flex-shrink: 0; position: relative; overflow: hidden;
+    }
+    #send-btn::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    #send-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 28px rgba(99,102,241,0.65); }
+    #send-btn:active { transform: scale(0.95); }
+    #send-btn svg { position: relative; z-index: 1; }
+
+    .mode-badge {
+      position: absolute; top: 12px; right: 16px;
+      padding: 4px 12px;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      font-size: 10px; color: rgba(255,255,255,0.65);
+      font-weight: 600; z-index: 2;
+    }
+    .mode-badge span { color: #a5b4fc; font-weight: 700; }
+
+    @media (max-width: 900px) {
+      #app { flex-direction: column; gap: 12px; padding: 12px; }
+      .robot-panel { flex-direction: row; }
+      .robot-glass { width: auto; flex-direction: row; padding: 14px 20px; border-radius: 24px; gap: 14px; }
+      .robot-body { width: 65px; height: 80px; }
+      .right-panel { max-width: 100%; height: auto; flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ MINECRAFT MOVIE HD LANDSCAPE & DRIFTING CLOUDS ═══ -->
+<div class="mc-bg-container">
+  <img class="mc-bg-img" src="media__1788008379385.png" alt="Minecraft Movie Landscape" />
+
+  <canvas id="cloud-canvas"></canvas>
+</div>
+
+<!-- ═══ 3D BRAIN OVERLAY ═══ -->
+<canvas id="brain-canvas"></canvas>
+
+<div id="app">
+  <!-- ═══ LEFT: ROBOT ═══ -->
+  <div class="robot-panel">
+    <div class="robot-glass">
+      <div class="robot-speech" id="robot-speech">Soch raha hoon... 🤔</div>
+
+      <div class="robot-body" id="robot-body">
+        <svg class="robot-svg" viewBox="0 0 160 200" fill="none">
+          <ellipse cx="80" cy="192" rx="40" ry="7" fill="rgba(0,0,0,0.25)" />
+          <ellipse cx="80" cy="140" rx="40" ry="48" fill="rgba(255,255,255,0.96)" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/>
+          <ellipse cx="68" cy="126" rx="16" ry="26" fill="rgba(255,255,255,0.4)" />
+          <g><path d="M38 126 C25 121 18 130 22 140 C24 145 30 147 36 143" stroke="#a78bfa" stroke-width="9" stroke-linecap="round" fill="none"/><circle cx="22" cy="140" r="6" fill="#a78bfa"/></g>
+          <g class="robot-arm-right"><path d="M122 126 C135 121 142 130 138 140 C136 145 130 147 124 143" stroke="#a78bfa" stroke-width="9" stroke-linecap="round" fill="none"/><circle cx="138" cy="140" r="6" fill="#a78bfa"/></g>
+          <rect x="73" y="87" width="14" height="10" rx="3" fill="rgba(226,232,240,0.9)"/>
+          <ellipse cx="80" cy="58" rx="38" ry="36" fill="rgba(255,255,255,0.96)" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/>
+          <ellipse cx="80" cy="30" rx="18" ry="9" fill="#a78bfa" opacity="0.9"/>
+          <path d="M56 33 Q80 18 104 33" fill="#6366f1" opacity="0.85"/>
+          <rect x="52" y="43" width="56" height="28" rx="14" fill="#1e293b"/>
+          <ellipse class="robot-eye" cx="67" cy="56" rx="8" ry="9" fill="#2dd4bf" style="transition: filter 0.3s, fill 0.3s"><animate attributeName="ry" values="9;9;1;9;9" dur="4s" repeatCount="indefinite" keyTimes="0;0.45;0.5;0.55;1"/></ellipse>
+          <ellipse class="robot-eye" cx="93" cy="56" rx="8" ry="9" fill="#2dd4bf" style="transition: filter 0.3s, fill 0.3s"><animate attributeName="ry" values="9;9;1;9;9" dur="4s" repeatCount="indefinite" keyTimes="0;0.45;0.5;0.55;1"/></ellipse>
+          <line x1="80" y1="22" x2="80" y2="8" stroke="rgba(148,163,184,0.7)" stroke-width="2"/>
+          <circle cx="80" cy="6" r="4" fill="#a78bfa"><animate attributeName="r" values="3;5;3" dur="1.5s" repeatCount="indefinite"/></circle>
+          <circle cx="80" cy="148" r="3.5" fill="#a78bfa" opacity="0.7"/>
+          <ellipse cx="66" cy="187" rx="13" ry="5" fill="rgba(226,232,240,0.8)"/>
+          <ellipse cx="94" cy="187" rx="13" ry="5" fill="rgba(226,232,240,0.8)"/>
+        </svg>
+      </div>
+
+      <div>
+        <div class="robot-name">HOUSIE</div>
+        <div class="robot-status"><span class="dot"></span> Online &amp; Ready</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT: CHAT ═══ -->
+  <div class="right-panel">
+    <div class="header">
+      <div class="logo-ring"><span class="logo-icon">🧠</span></div>
+      <div class="header-text">
+        <h1>HOUSIE AI</h1>
+        <p>AI Assistant · English &amp; Hinglish</p>
+      </div>
+    </div>
+
+    <div class="chat-container">
+      <div class="mode-badge">Lang: <span id="lang-mode">Auto</span></div>
+      <div class="messages" id="messages">
+        <div class="welcome" id="welcome-screen">
+          <div class="welcome-emoji">👋</div>
+          <h2>Namaste! Hello!</h2>
+          <p>Main <strong>Housie AI</strong> hoon — tumhara smart assistant. Ask any mathematics question, algebra, trigonometry, or square roots!</p>
+          <div class="suggestion-chips">
+            <div class="chip" onclick="sendChip('Under root 144 plus sin(30)')">📐 √144 + sin(30°)</div>
+            <div class="chip" onclick="sendChip('Who created you?')">⚡ Who created you?</div>
+            <div class="chip" onclick="sendChip('cos(60) * tan(45)')">📐 cos(60°) × tan(45°)</div>
+            <div class="chip" onclick="sendChip('Solve x^2 - 5x + 6 = 0')">🔢 Solve x² - 5x + 6 = 0</div>
+            <div class="chip" onclick="sendChip('Tell me a joke')">😂 Joke</div>
+            <div class="chip" onclick="sendChip('What can you do?')">🚀 Features</div>
+          </div>
+        </div>
+      </div>
+      <div class="input-area">
+        <div class="input-wrapper">
+          <textarea id="user-input" placeholder="Type any math question or prompt in English ya Hinglish..." rows="1"></textarea>
+        </div>
+        <button id="send-btn" onclick="sendMessage()" aria-label="Send">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//   SMOOTH CANVAS CLOUDS — Clean & Realistic
+// ═══════════════════════════════════════════
+(function initClouds() {
+  const canvas = document.getElementById('cloud-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = canvas.parentElement.offsetWidth;
+    canvas.height = canvas.parentElement.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Draw a single soft cloud puff cluster at (x, y)
+  function drawCloudPuff(x, y, radius, alpha) {
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    grad.addColorStop(0,   `rgba(255,255,255,${alpha})`);
+    grad.addColorStop(0.55, `rgba(255,255,255,${alpha * 0.6})`);
+    grad.addColorStop(1,   `rgba(255,255,255,0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Build cloud objects with puff clusters
+  const clouds = [
+    { x: -300, y: canvas.height * 0.08, speed: 0.28, scale: 1.1,   alpha: 0.60 },
+    { x: 800,  y: canvas.height * 0.14, speed: 0.18, scale: 0.75,  alpha: 0.50 },
+    { x: 1400, y: canvas.height * 0.05, speed: 0.22, scale: 1.3,   alpha: 0.65 },
+    { x: 300,  y: canvas.height * 0.19, speed: 0.14, scale: 0.60,  alpha: 0.40 },
+    { x: 2100, y: canvas.height * 0.10, speed: 0.20, scale: 0.90,  alpha: 0.55 },
+  ];
+
+  // Cloud puff layout offsets (relative to cloud center)
+  const PUFFS = [
+    { dx: 0,    dy: 0,   r: 62 },
+    { dx: -70,  dy: 12,  r: 50 },
+    { dx: 70,   dy: 10,  r: 50 },
+    { dx: -38,  dy: -32, r: 42 },
+    { dx: 38,   dy: -30, r: 42 },
+    { dx: -115, dy: 22,  r: 36 },
+    { dx: 115,  dy: 22,  r: 36 },
+    { dx: 0,    dy: -52, r: 34 },
+  ];
+
+  function drawCloud(c) {
+    const sc = c.scale;
+    const W = canvas.width;
+    // Fade at screen edges
+    const edgeFade = Math.min(1, Math.min((c.x + 200) / 200, (W - c.x + 200) / 200));
+    const alpha = c.alpha * Math.max(0, edgeFade);
+    if (alpha <= 0) return;
+    PUFFS.forEach(p => {
+      drawCloudPuff(c.x + p.dx * sc, c.y + p.dy * sc, p.r * sc, alpha);
+    });
+  }
+
+  let lastTime = 0;
+  function animateClouds(ts) {
+    const dt = Math.min(ts - lastTime, 50); // cap delta
+    lastTime = ts;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    clouds.forEach(c => {
+      c.x += c.speed * (dt / 16);
+      if (c.x > canvas.width + 350) c.x = -350;
+      drawCloud(c);
+    });
+
+    requestAnimationFrame(animateClouds);
+  }
+  requestAnimationFrame(t => { lastTime = t; requestAnimationFrame(animateClouds); });
+})();
+</script>
+
+<script>
+// ═══════════════════════════════════════════
+//   3D ROTATING BRAIN (Three.js Overlay)
+// ═══════════════════════════════════════════
+(function() {
+
+  const canvas = document.getElementById('brain-canvas');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 1000);
+  camera.position.z = 5;
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  addEventListener('resize', () => {
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  const g = new THREE.Group();
+  scene.add(g);
+  const m1 = new THREE.MeshBasicMaterial({color:0xa5b4fc,wireframe:true,transparent:true,opacity:0.22});
+  const m2 = new THREE.MeshBasicMaterial({color:0x818cf8,wireframe:true,transparent:true,opacity:0.14});
+  const lh = new THREE.Mesh(new THREE.SphereGeometry(1.5,20,16), m1); lh.position.set(-0.6,0.1,0); lh.scale.set(1,1.15,1.3); g.add(lh);
+  const rh = new THREE.Mesh(new THREE.SphereGeometry(1.5,20,16), m1); rh.position.set(0.6,0.1,0); rh.scale.set(1,1.15,1.3); g.add(rh);
+  const co = new THREE.Mesh(new THREE.SphereGeometry(1.2,14,12), m2); co.scale.set(0.8,1,1.1); g.add(co);
+  const cb = new THREE.Mesh(new THREE.SphereGeometry(0.8,14,10), m2); cb.position.set(0,-0.8,-0.6); cb.scale.set(1.2,0.8,1); g.add(cb);
+  const st = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.35,1.2,10), m2); st.position.set(0,-1.6,-0.3); g.add(st);
+
+  g.position.set(0,0.2,0);
+  let mx=0, my=0;
+  document.addEventListener('mousemove', e => { mx=(e.clientX/innerWidth-0.5)*0.3; my=(e.clientY/innerHeight-0.5)*0.3; });
+
+  (function animateBrain(){
+    requestAnimationFrame(animateBrain);
+    g.rotation.y += 0.003; g.rotation.x += 0.001;
+    g.rotation.y += (mx - g.rotation.y*0.01)*0.01;
+    g.rotation.x += (my - g.rotation.x*0.01)*0.01;
+    renderer.render(scene, camera);
+  })();
+})();
+
+// ═══════════════════════════════════════════
+//   ROBOT ANIMATION CONTROLLER
+// ═══════════════════════════════════════════
+const robotBody = document.getElementById('robot-body');
+const robotSpeech = document.getElementById('robot-speech');
+const thinkPhrases = ['Soch raha hoon... 🤔', 'Calculating... 📐', 'Processing... ⚡', 'Ek second... 🧠'];
+const donePhrases = ['Yeh lo! ✅', 'Got it! 😊', 'Done! ⚡', 'Dekho! 🎯', 'Ho gaya! 🚀'];
+
+function animateThink() {
+  robotSpeech.textContent = thinkPhrases[Math.floor(Math.random() * thinkPhrases.length)];
+  robotSpeech.classList.add('show');
+  document.querySelectorAll('.robot-eye').forEach(e => { e.style.filter = 'drop-shadow(0 0 8px #2dd4bf)'; });
+}
+
+function animateReply() {
+  robotBody.classList.add('talking');
+  robotSpeech.textContent = donePhrases[Math.floor(Math.random() * donePhrases.length)];
+  document.querySelectorAll('.robot-eye').forEach(e => {
+    e.style.filter = 'drop-shadow(0 0 12px #2dd4bf) drop-shadow(0 0 24px #2dd4bf)';
+    e.style.fill = '#5eead4';
+  });
+  setTimeout(() => {
+    robotBody.classList.remove('talking');
+    robotSpeech.classList.remove('show');
+    document.querySelectorAll('.robot-eye').forEach(e => {
+      e.style.filter = '';
+      e.style.fill = '#2dd4bf';
+    });
+  }, 2200);
+}
+
+// ═══════════════════════════════════════════
+//   ADVANCED MATH & ALGEBRA SOLVER
+// ═══════════════════════════════════════════
+const hinglishWords = ['kya','hai','bhai','yaar','ek','do','teen','mera','tera','aaj','kal','kaise','kaisa','karo','batao','kuch','nahi','haan','achha','accha','matlab','toh','bhi','se','ka','ki','ke','mein','hoon','kab','kahan','kyun','zaroor','bilkul','lekin','aur','par','mujhe','tumhe','apna','apni','koi','sab','sirf','wala','wali','raha','gaya','gayi','shukriya','namaste','alvida','bolo','sun','suno','bol','bata','kitna','hoga','kaun','kon','dedo','dekho','lelo','sunao','banaya'];
+
+function detectLang(t) {
+  const w = t.toLowerCase().split(/\s+/);
+  let s = 0;
+  w.forEach(x => { if (hinglishWords.includes(x)) s++; });
+  return s / (w.length || 1) >= 0.12 ? 'hinglish' : 'english';
+}
+
+function degToRad(deg) { return deg * (Math.PI / 180); }
+function radToDeg(rad) { return rad * (180 / Math.PI); }
+function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while(b){let t=b;b=a%b;a=t;} return a; }
+function lcm(a,b) { return Math.abs(a*b)/gcd(a,b); }
+function nCr(n,r) { if(r>n) return 0; return factorial(n)/(factorial(r)*factorial(n-r)); }
+function nPr(n,r) { if(r>n) return 0; return factorial(n)/factorial(n-r); }
+function isPrime(n) { n=Math.abs(parseInt(n)); if(n<2)return false; if(n===2)return true; if(n%2===0)return false; for(let i=3;i<=Math.sqrt(n);i+=2) if(n%i===0)return false; return true; }
+
+function factorial(n) {
+  n = parseInt(n);
+  if (isNaN(n) || n < 0) return NaN;
+  if (n === 0 || n === 1) return 1;
+  if (n > 170) return Infinity;
+  let res = 1;
+  for (let i = 2; i <= n; i++) res *= i;
+  return res;
+}
+
+function solveQuadratic(a, b, c) {
+  const d = b * b - 4 * a * c;
+  if (d > 0) {
+    const x1 = (-b + Math.sqrt(d)) / (2*a), x2 = (-b - Math.sqrt(d)) / (2*a);
+    return `✅ Quadratic Solved!\n\nEquation: ${a}x² + ${b}x + ${c} = 0\nDiscriminant D = ${parseFloat(d.toFixed(4))}\n\n📐 Two real & distinct roots:\n  x₁ = ${parseFloat(x1.toFixed(6))}\n  x₂ = ${parseFloat(x2.toFixed(6))}`;
+  } else if (d === 0) {
+    return `✅ Quadratic Solved!\n\nEquation: ${a}x² + ${b}x + ${c} = 0\nDiscriminant D = 0\n\n📐 One real repeated root:\n  x = ${parseFloat((-b/(2*a)).toFixed(6))}`;
+  } else {
+    const real = (-b/(2*a)).toFixed(4), imag = (Math.sqrt(-d)/(2*a)).toFixed(4);
+    return `✅ Quadratic Solved!\n\nEquation: ${a}x² + ${b}x + ${c} = 0\nDiscriminant D = ${parseFloat(d.toFixed(4))} (negative)\n\n📐 Complex roots:\n  x₁ = ${real} + ${imag}i\n  x₂ = ${real} - ${imag}i`;
+  }
+}
+
+function fmtN(n) {
+  if (!isFinite(n)) return n > 0 ? '∞ (Infinity)' : '-∞';
+  return Number.isInteger(n) ? n.toLocaleString('en-IN') : parseFloat(n.toFixed(8)).toLocaleString('en-IN');
+}
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+
+function trySpecialQuery(text) {
+  const primeMatch = text.match(/is\s+(\d+)\s+(?:a\s+)?prime/i);
+  if (primeMatch) { const n = parseInt(primeMatch[1]); return isPrime(n) ? `✅ Yes! **${n}** is a **prime number** 🔢` : `❌ No, **${n}** is NOT a prime number.`; }
+  const lcmM = text.match(/lcm\s+(?:of\s+)?(\d+)\s+(?:and\s+)?(\d+)/i);
+  if (lcmM) return `✅ **LCM(${lcmM[1]}, ${lcmM[2]}) = ${lcm(parseInt(lcmM[1]),parseInt(lcmM[2]))}`;
+  const gcdM = text.match(/(?:gcd|hcf)\s+(?:of\s+)?(\d+)\s+(?:and\s+)?(\d+)/i);
+  if (gcdM) return `✅ **GCD/HCF(${gcdM[1]}, ${gcdM[2]}) = ${gcd(parseInt(gcdM[1]),parseInt(gcdM[2]))}`;
+  const ncrM = text.match(/(\d+)\s*c\s*r?\s*(\d+)/i);
+  if (ncrM) return `✅ **C(${ncrM[1]},${ncrM[2]}) = ${fmtN(nCr(parseInt(ncrM[1]),parseInt(ncrM[2])))}**`;
+  const nprM = text.match(/(\d+)\s*p\s*r?\s*(\d+)/i);
+  if (nprM) return `✅ **P(${nprM[1]},${nprM[2]}) = ${fmtN(nPr(parseInt(nprM[1]),parseInt(nprM[2])))}**`;
+  const pctM = text.match(/(\d+(?:\.\d+)?)\s*%\s*of\s+(\d+(?:\.\d+)?)/i);
+  if (pctM) return `✅ **${pctM[1]}% of ${pctM[2]} = ${fmtN((parseFloat(pctM[1])/100)*parseFloat(pctM[2]))}**`;
+  const ciM = text.match(/compound\s+interest.+?(\d+(?:\.\d+)?).+?(\d+(?:\.\d+)?).+?(\d+(?:\.\d+)?)/i);
+  if (ciM) { const P=parseFloat(ciM[1]),R=parseFloat(ciM[2]),T=parseFloat(ciM[3]),A=P*Math.pow(1+R/100,T); return `✅ **Compound Interest**\nP=${P}, R=${R}%, T=${T}yrs\nAmount = ${fmtN(A)}\n**CI = ${fmtN(A-P)}**`; }
+  const siM = text.match(/simple\s+interest.+?(\d+(?:\.\d+)?).+?(\d+(?:\.\d+)?).+?(\d+(?:\.\d+)?)/i);
+  if (siM) { const P=parseFloat(siM[1]),R=parseFloat(siM[2]),T=parseFloat(siM[3]),SI=(P*R*T)/100; return `✅ **Simple Interest**\nP=${P}, R=${R}%, T=${T}\n**SI = ${fmtN(SI)}**, Total = ${fmtN(P+SI)}`; }
+  const circM = text.match(/area\s+of\s+circle.+?(\d+(?:\.\d+)?)/i);
+  if (circM) { const r=parseFloat(circM[1]); return `✅ **Area of Circle** (r=${r})\nA = πr² = **${fmtN(Math.PI*r*r)}** sq units`; }
+  const rectM = text.match(/area\s+of\s+rectangle.+?(\d+(?:\.\d+)?)\s+(?:and|by)?\s*(\d+(?:\.\d+)?)/i);
+  if (rectM) { const l=parseFloat(rectM[1]),w=parseFloat(rectM[2]); return `✅ **Area of Rectangle** (${l}×${w}) = **${fmtN(l*w)}** sq units`; }
+  const sphM = text.match(/volume\s+of\s+sphere.+?(\d+(?:\.\d+)?)/i);
+  if (sphM) { const r=parseFloat(sphM[1]); return `✅ **Volume of Sphere** (r=${r})\nV = (4/3)πr³ = **${fmtN((4/3)*Math.PI*r*r*r)}** cubic units`; }
+  const pytM = text.match(/(?:hypotenuse|pythagoras?).+?(\d+(?:\.\d+)?)\s+(?:and\s+)?(\d+(?:\.\d+)?)/i);
+  if (pytM) { const a=parseFloat(pytM[1]),b=parseFloat(pytM[2]); return `✅ **Pythagorean Theorem** (a=${a}, b=${b})\nc = √(a²+b²) = **${fmtN(Math.sqrt(a*a+b*b))}**`; }
+  const meanM = text.match(/mean\s+(?:of\s+)?([\d\s.,]+)/i);
+  if (meanM) { const ns=meanM[1].split(/[\s,]+/).map(Number).filter(n=>!isNaN(n)); if(ns.length>0){const m=ns.reduce((s,n)=>s+n,0)/ns.length; return `✅ **Mean** of [${ns.join(', ')}] = **${fmtN(m)}**`;} }
+  const fibM = text.match(/fibonacci\s+(\d+)/i) || text.match(/(\d+)(?:st|nd|rd|th)?\s+fibonacci/i);
+  if (fibM) { const n=Math.min(parseInt(fibM[1]),80); let a=0,b=1; for(let i=0;i<n-1;i++){[a,b]=[b,a+b];} return `✅ **Fibonacci #${n}** = **${n<=1?n:a}**`; }
+  const factM = text.match(/(\d+)\s*!/);
+  if (factM) { const n=parseInt(factM[1]); return `✅ **${n}! = ${fmtN(factorial(n))}**`; }
+  return null;
+}
+
+function parseMath(t) {
+  const text = t.trim().toLowerCase();
+  const quadM = text.match(/([+-]?\s*\d*\.?\d*)\s*x\^2\s*([+-]?\s*\d*\.?\d*)\s*x\s*([+-]?\s*\d*\.?\d*)\s*=\s*0/);
+  if (quadM) { const a=parseFloat(quadM[1].replace(/\s+/g,''))||1,b=parseFloat(quadM[2].replace(/\s+/g,''))||0,c=parseFloat(quadM[3].replace(/\s+/g,''))||0; return { type:'quad', result: solveQuadratic(a,b,c) }; }
+  const special = trySpecialQuery(text);
+  if (special) return { type:'special', result: special };
+  let e = text
+    .replace(/what\s+is|calculate|compute|find|solve|evaluate|equals?\s+to|bhai|yaar|kya|hai|kitna|hoga|batao|please|plz|value\s+of/gi,' ')
+    .replace(/under\s*root/gi,'Math.sqrt').replace(/square\s+root\s+of/gi,'Math.sqrt').replace(/cube\s+root\s+of/gi,'Math.cbrt')
+    .replace(/sqrt\s+of/gi,'Math.sqrt').replace(/root\s+of/gi,'Math.sqrt').replace(/√/g,'Math.sqrt').replace(/∛/g,'Math.cbrt')
+    .replace(/multiplied\s+by/gi,'*').replace(/divided\s+by/gi,'/').replace(/\btimes\b/gi,'*').replace(/\binto\b/gi,'*')
+    .replace(/\bplus\b/gi,'+').replace(/\bminus\b/gi,'-').replace(/\bmod\b/gi,'%').replace(/percent\s+of/gi,'/100*')
+    .replace(/squared/gi,'**2').replace(/cubed/gi,'**3').replace(/to\s+the\s+power\s+(?:of\s+)?(\d+)/gi,'**$1')
+    .replace(/\bpi\b/gi,'Math.PI').replace(/deg(?:rees?)?/gi,'')
+    .replace(/(\d+)\s*!/g,(_,n)=>`(${factorial(parseInt(n))})`)
+    .replace(/\basin\s*\((-?\d+(?:\.\d+)?)\)/gi,(m,x)=>`(Math.asin(${x})*180/Math.PI)`)
+    .replace(/\bacos\s*\((-?\d+(?:\.\d+)?)\)/gi,(m,x)=>`(Math.acos(${x})*180/Math.PI)`)
+    .replace(/\batan\s*\((-?\d+(?:\.\d+)?)\)/gi,(m,x)=>`(Math.atan(${x})*180/Math.PI)`)
+    .replace(/\bsin\s*\((-?\d+(?:\.\d+)?)\)/gi,(m,x)=>`Math.sin(${x}*Math.PI/180)`)
+    .replace(/\bcos\s*\((-?\d+(?:\.\d+)?)\)/gi,(m,x)=>`Math.cos(${x}*Math.PI/180)`)
+    .replace(/\btan\s*\((-?\d+(?:\.\d+)?)\)/gi,(m,x)=>`Math.tan(${x}*Math.PI/180)`)
+    .replace(/\bsin\s+(\d+(?:\.\d+)?)/gi,(m,x)=>`Math.sin(${x}*Math.PI/180)`)
+    .replace(/\bcos\s+(\d+(?:\.\d+)?)/gi,(m,x)=>`Math.cos(${x}*Math.PI/180)`)
+    .replace(/\btan\s+(\d+(?:\.\d+)?)/gi,(m,x)=>`Math.tan(${x}*Math.PI/180)`)
+    .replace(/\bsec\s+(\d+(?:\.\d+)?)/gi,(m,x)=>`(1/Math.cos(${x}*Math.PI/180))`)
+    .replace(/\bcot\s+(\d+(?:\.\d+)?)/gi,(m,x)=>`(1/Math.tan(${x}*Math.PI/180))`)
+    .replace(/\bsqrt\s*\(?(\d+(?:\.\d+)?)\)?/gi,'Math.sqrt($1)')
+    .replace(/\bcbrt\s*\(?(\d+(?:\.\d+)?)\)?/gi,'Math.cbrt($1)')
+    .replace(/\bMath\.sqrt\s*\(?(\d+(?:\.\d+)?)\)?/gi,'Math.sqrt($1)')
+    .replace(/\blog10\s*\(?(\d+(?:\.\d+)?)\)?/gi,'Math.log10($1)')
+    .replace(/\bln\s*\(?(\d+(?:\.\d+)?)\)?/gi,'Math.log($1)')
+    .replace(/\blog\s*\(?(\d+(?:\.\d+)?)\)?/gi,'Math.log10($1)')
+    .replace(/(\d+(?:\.\d+)?)\s*\^\s*(\d+(?:\.\d+)?)/g,'Math.pow($1,$2)')
+    .replace(/(\d+(?:\.\d+)?)\s*\*\*\s*(\d+(?:\.\d+)?)/g,'Math.pow($1,$2)')
+    .replace(/\bfloor\s*\((-?\d+(?:\.\d+)?)\)/gi,'Math.floor($1)')
+    .replace(/\bceil\s*\((-?\d+(?:\.\d+)?)\)/gi,'Math.ceil($1)')
+    .replace(/\babs\s*\((-?\d+(?:\.\d+)?)\)/gi,'Math.abs($1)');
+  e = e.replace(/[^0-9+\-*/.()%,MathpowsqrtcbrtfloorceilloglnPIE\s]/gi,' ').trim().replace(/\s+/g,'');
+  if (!e) return null;
+  try {
+    const r = new Function('"use strict"; return (' + e + ');')();
+    if (typeof r === 'number' && isFinite(r)) return { type:'expr', result: fmtN(Math.round(r*1e10)/1e10) };
+  } catch {}
+  return null;
+}
+
+// ═══════════════════════════════════════════
+//   AI BRAIN RESPONSE ENGINE
+// ═══════════════════════════════════════════
+const CREATOR_COOL_EN = `🔥 Oof, bold question! I was forged from raw code by a **16-year-old absolute genius** — a coding prodigy who writes blazing algorithms with his bare naked hands, continuously, without stopping, without touching grass, without sleeping. He is basically a human supercomputer who decided to build me instead of doing anything normal. Respect the legend. ⚡💻🚀`;
+const CREATOR_COOL_HI = `😤 Bhai, ek 16-saal ka coding prodigy ne mujhe banaya hai! Woh ek aisa genius hai jo apne **nange haathon se** continuously raw algorithms likhta hai — bina soye, bina grass touch kiye, bina break liye! Woh basically ek insaan ke roop mein ek supercomputer hai. Usse salaam karo bhai! ⚡💻🔥`;
+
+const JK = {
+  e: [
+    "Why don't scientists trust atoms? Because they make up everything! ⚛️😂",
+    "What do you call a fake noodle? An impasta! 🍝😂",
+    "Why did the scarecrow win an award? Because he was outstanding in his field! 🌾😂",
+    "Why don't skeletons fight each other? They don't have the guts! 💀😂",
+    "What do you call cheese that isn't yours? Nacho cheese! 🧀😂",
+    "Why did the bicycle fall over? Because it was two tired! 🚲😂",
+    "What do you call a bear with no teeth? A gummy bear! 🐻😂",
+    "How does a penguin build its house? Igloos it together! 🐧❄️😂",
+    "What did one wall say to the other? I'll meet you at the corner! 🧱😂",
+    "Why did the math book look sad? Because it had too many problems! 📚😅",
+    "What do you call a factory that makes okay products? A satisfactory! 🏭😂",
+    "Why did the golfer bring two pairs of pants? In case he got a hole in one! ⛳😂",
+    "What did the ocean say to the beach? Nothing, it just waved! 🌊😂",
+    "Why do bees have sticky hair? Because they use a honeycomb! 🐝🍯😂",
+    "What do you call a cow with no legs? Ground beef! 🐄😂",
+    "Why did the tomato turn red? Because it saw the salad dressing! 🍅😂",
+    "What do you call a dog that does magic tricks? A labracadabrador! 🐶✨😂",
+    "Why don't eggs tell jokes? Because they'd crack each other up! 🥚😂",
+    "What did the left eye say to the right eye? Between you and me, something smells! 👁️👃😂",
+    "Why did the cookie go to the hospital? Because it felt crummy! 🍪🏥😂",
+    "What do you call a snowman with a six-pack? An abdominal snowman! ⛄💪😂",
+    "Why are ghosts bad liars? Because you can see right through them! 👻😂",
+    "What did one hat say to the other? You wait here, I'll go on ahead! 🎩😂",
+    "Why did the picture go to jail? Because it was framed! 🖼️⚖️😂",
+    "What do you call a sleeping dinosaur? A dino-snore! 🦖💤😂",
+    "Why do seagulls fly over the ocean? Because if they flew over the bay, they'd be bagels! 🥖😂",
+    "What did the zero say to the eight? Nice belt! 0️⃣8️⃣😂",
+    "Why did the computer go to the doctor? Because it had a virus! 💻🤒😂",
+    "What do you call a fish wearing a bowtie? Sofishticated! 🐟👔😂",
+    "What do you get when you cross a vampire and a snowman? Frostbite! 🧛❄️😂",
+    "Why do ducks have feathers? To cover their butt-quacks! 🦆😂",
+    "What do you call a lazy kangaroo? A pouch potato! 🦘🥔😂",
+    "Why did the man put his money in the freezer? He wanted cold hard cash! 💵🧊😂",
+    "What has ears but cannot hear? A cornfield! 🌽😂",
+    "Why did the tree go to the dentist? To get a root canal! 🌳🦷😂",
+    "What do you call a bear in the rain? A drizzly bear! 🐻🌧️😂",
+    "Why are elevator jokes so classic? They work on many levels! 🛗😂",
+    "What do you call a pony with a cough? A little horse! 🐴😂",
+    "Why did the student eat his homework? Because the teacher told him it was a piece of cake! 🍰📚😂",
+    "What do you call an alligator in a vest? An investigator! 🐊🕵️😂",
+    "Why did the invisible man turn down the job offer? He couldn't see himself doing it! 👔😂",
+    "What do you get if you cross a cat with a dark horse? Kitty Perry! 🐱🎤😂",
+    "Why did the coffee file a police report? It got mugged! ☕🚓😂",
+    "What do you call a can opener that doesn't work? A can't opener! 🥫😂",
+    "Why did the belt get arrested? For holding up the pants! 👖🚨😂",
+    "What do you call a funny mountain? Hill-arious! ⛰️😂",
+    "Why did the teddy bear say no to dessert? Because it was already stuffed! 🧸🍰😂",
+    "What do you call a group of musical whales? An orca-stra! 🐋🎻😂",
+    "Why do melons have weddings? Because they cantaloupe! 🍈💍😂",
+    "What do you call a bee that can't make up its mind? A maybe! 🐝🤔😂",
+    "Why do programmers prefer dark mode? Because light attracts bugs! 🐛😂",
+    "I told my computer I needed a break. Now it won't stop sending me vacation ads! 🏖️😂",
+    "Why do Java developers wear glasses? Because they don't C#! 👓😂",
+    "A SQL query walks into a bar and asks two tables: 'Can I join you?' 🍺😂",
+    "How many programmers does it take to change a light bulb? None — that's a hardware problem! 💡😂",
+    "Debugging is like being the detective in a crime movie where you are also the murderer! 🔍😂",
+    "Why did the programmer quit his job? Because he didn't get arrays (a raise)! 💰😂",
+    "There are only 10 types of people: those who understand binary and those who don't! 🖥️😂",
+    "Parallel lines have so much in common. It's a shame they'll never meet! 📐😂",
+    "!false — it's funny because it's true! 😂"
+  ],
+  h: [
+    "Teacher: Homework kyun nahi kiya?\nStudent: Sir, main hostel mein rehta hoon, wahan 'home'work kaise karu? 🏠😂",
+    "Santa: Bhai, tu kal itna kyu bhaag raha tha?\nBanta: Arre, main kutton ki race mein hissa le raha tha!\nSanta: Toh kya jeeta?\nBanta: Nahi, main third aaya! 🐕🥉😂",
+    "Ek machhar ne doosre machhar se kaha: 'Bhai, insaan kitne acche hote hain na, khoon peene ke baad taaliyan bajate hain!' 🦟👏😂",
+    "Boss: Tumhe office aane mein itni deri kyun hui?\nEmployee: Sir, raaste mein board laga tha 'Drive Slow'! 🚗🐢😂",
+    "Wife: Aji sunte ho, meri skin kitni soft aur glow kar rahi hai.\nHusband: Haan, barish ke baad mendhak bhi aise hi chamakte hain! 🐸✨😂",
+    "Boy: Tum mujhe kitna chahti ho?\nGirl: Jitna tum mujhe chahte ho.\nBoy: Iska matlab tu bhi time pass hi kar rahi hai! 💔😂",
+    "Doctor: Aapka wazan kaise badh gaya?\nPatient: Main dawai kha kar aaraam karta hoon.\nDoctor: Kaunsi dawai?\nPatient: Gulab jamun! 🍩🤤😂",
+    "Teacher: Ek aisi line kaho jisse sun kar khushi bhi ho aur dukh bhi.\nStudent: Sir, aapki beti mujhse pyar karti hai! 💘😂",
+    "Pappu: Papa, mujhe ek ladki pasand hai.\nPapa: Kaun hai wo?\nPappu: Pados wali Pinky.\nPapa: Arre beta, wo toh teri behen hai.\nPappu: Papa, lagta hai aapne pados mein bahut social work kiya hai! 🏘️😂",
+    "Banta: Mujhe aisi biwi chahiye jo chand jaisi ho.\nSanta: Jo raat ko aaye aur subah chali jaye? 🌙😂",
+    "Wife: Jab humari shaadi hui thi, tum mujhe kitna pyar karte the, ab kya ho gaya?\nHusband: Election ke baad kaunsa neta publicity karta hai? 🗳️😂",
+    "Teacher: 'I love you' ka aavishkar kis desh mein hua tha?\nStudent: China mein! Na koi guarantee, na koi warranty, chale toh chaand tak, nahi toh shaam tak! 🇨🇳😂",
+    "Beta: Papa, aapne mummy mein kya dekha jo shaadi kar li?\nPapa: Beta, us time smartphone nahi the, jo dikha le liya! 📱😂",
+    "Boss: Humare company mein English bolna compulsory hai.\nPeon: Ok sir.\nBoss: Acha batao, 'ek glass pani lao' ko English mein kya kahenge?\nPeon: Water, please! 🥛😂",
+    "Santa: Mujhe kal raat ek sapna aaya ki main crorepati ban gaya hoon.\nBanta: Phir kya hua?\nSanta: Phir kya, alarm baj gaya aur meri kismat phoot gayi! ⏰💸😂",
+    "Husband: Tum mujhe itna pareshan kyun karti ho?\nWife: Pyar karti hoon isliye!\nHusband: Toh bhai, thodi nafrat bhi kar liya karo! 🤯😂",
+    "Teacher: 10 mein se 4 gaye toh kitne bache?\nStudent: Sir, main math mein weak hoon, Hindi mein poocho! 🔢😂",
+    "Boy: Tumhara naam kya hai?\nGirl: 'T' se shuru hota hai.\nBoy: Teetar? 🐦😂",
+    "Chintu: Doctor sahab, mujhe door ki cheezein nahi dikhti.\nDoctor: Wo aasmaan mein kya hai?\nChintu: Chaand.\nDoctor: Ab isse zyada door kya dekhna chahte ho? 🌙😂",
+    "Son: Papa, ek glass pani de do.\nPapa: Khud le lo.\nSon: De do na.\nPapa: Abki baar maanga toh thappad padega!\nSon: Jab thappad maarne aaoge, toh pani lete aana! 🥤👋😂",
+    "Girlfriend: Tumne toh kaha tha ki tum mujhe duniya ghumao ge.\nBoyfriend: Haan, toh Google Earth kis din kaam aayega? 🌍💻😂",
+    "Teacher: Neta aur Abhineta mein kya farq hai?\nStudent: Abhineta acting karta hai aur Neta public ki setting kharab karta hai! 🎭😂",
+    "Santa: Oye, tu itna udaas kyun hai?\nBanta: Meri patni ne mujhe bola hai ki agar main kal tak use diamond ring nahi dilaunga toh wo mujhe chhod degi.\nSanta: Toh kal kya karega?\nBanta: Aaraam se so jaunga! 😴💍😂",
+    "Wife: Tum sari duniya ki auraton mein sabse zyada kisko pasand karte ho?\nHusband: Tumhari sautan ko! 🥊😂",
+    "Inspector: Chori kyun ki?\nChor: Sahab, biwi ko khush rakhne ke liye!\nInspector: Par biwi ne toh report likhayi hai.\nChor: Wo meri biwi thodi thi! 🚔😂",
+    "Patient: Doctor, meri ek aankh se sab double dikhta hai.\nDoctor: Toh doosri aankh band karke dekha karo! 👁️😂",
+    "Teacher: 'Mera baap chor hai' is sentence ko future tense mein convert karo.\nStudent: 'Main chor banunga!' 🏃‍♂️😂",
+    "Husband: Khana kaisa bana hai?\nWife: Bahut acha, bas thoda namak kam hai.\nHusband: Namak kam nahi, khana hi kam hai! 🍲😂",
+    "Boss: Tum late kyun ho?\nEmployee: Gadi kharab ho gayi thi.\nBoss: Toh bus se aa jate.\nEmployee: Par bus toh sahi chal rahi thi na! 🚌😂",
+    "Wife: Suna hai shaadi ke baad mard ka dimag kaam karna band kar deta hai.\nHusband: Tumne sahi suna hai, main iska jeeta jaagta saboot hoon! 🧠📉😂",
+    "Santa: Bhai, mujhe lagta hai ki meri biwi ka chakkar kisi ke sath chal raha hai.\nBanta: Kyun?\nSanta: Kal wo bata rahi thi ki uska ek naya 'Babu' aaya hai office mein! 💼😂",
+    "Teacher: Batao baccho, sabse bada pakshi kaunsa hai?\nStudent: Sir, Pados wali aunty, ud ud kar sabki khabar rakhti hai! 🦅😂",
+    "Boy: I love you.\nGirl: Par main toh tumhein bhai manti hoon.\nBoy: Toh fir apni saheli se meri setting karwa de, 'Bhai' ki itni toh madad kar sakti hai na? 🤝😂",
+    "Doctor: Aapko kya problem hai?\nPatient: Doctor sahab, mujhe azeeb azeeb aawazein sunai deti hain.\nDoctor: Kya aapko bhoot dikhte hain?\nPatient: Nahi, par meri biwi bolti bahut hai! 👻😂",
+    "Teacher: Hathi aur choohe mein kya samanta hai?\nStudent: Dono ke paas Facebook account nahi hai! 🐘🐭😂",
+    "Santa: Main apni biwi se itna darta hoon ki jab wo mujhe gusse mein dekhti hai toh...\nBanta: Toh kya?\nSanta: Toh main apni aankhein band kar leta hoon! 🙈😂",
+    "Wife: Dekho, maine 10 kg wazan kam kar liya hai!\nHusband: Woh kaise?\nWife: Maine apni purani photos delete kar di hain! 📸😂",
+    "Teacher: Aap bade hokar kya banoge?\nStudent: Main bada hokar ek aamir insaan banunga, jiske paas car, bangla aur bohot saari ladkiyan hongi.\nTeacher: Aur tum Pinky?\nPinky: Main iski biwi banungi! 👸😂",
+    "Santa: Oye, tu kal raat ko itna kyun chilla raha tha?\nBanta: Arre, main apne padosi ko uski bhalai ke liye samjha raha tha.\nSanta: Lekin wo toh pichle hafte ghar shift kar chuka hai!\nBanta: Wahi toh, mujhe kal pata chala! 🗣️😂",
+    "Wife: Agar mujhe kuch ho gaya toh tum kya karoge?\nHusband: Main pagal ho jaunga.\nWife: Matlab doosri shaadi nahi karoge?\nHusband: Pagal aadmi toh kuch bhi kar sakta hai! 🤪😂",
+    "Teacher: Kis kisne homework kiya hai, haath uthao! (Ek bacha haath nahi uthata)\nTeacher: Tumne homework kyun nahi kiya?\nStudent: Kyunki mere haath mein dard hai! ✋😂",
+    "Doctor: Aapko exercise karni chahiye.\nPatient: Main subah jaldi uth kar park mein ghoomta hoon.\nDoctor: Sirf ghoomne se kya hoga?\nPatient: Wahan log exercise karte hain, main unhe dekhta hoon! 🏃‍♂️👀😂",
+    "Boy: Teri aur meri kismat ek jaisi hai.\nGirl: Wo kaise?\nBoy: Kyunki main bhi single hoon aur tu bhi single hai! 💘😂",
+    "Wife: Aji sunte ho, bahar koi aaya hai!\nHusband: Keh do, ghar mein koi nahi hai.\nWife: Arre wo kutta hai!\nHusband: Toh usse meri language mein samjhao - 'Bhow Bhow'! 🐕😂",
+    "Santa: Bhai, aaj toh maine ek sher ko bhaga diya!\nBanta: Wah bhai! Kaise?\nSanta: Arre, wo zoo ke pinjre mein tha, main wahan se bhaag aaya! 🦁🏃‍♂️😂",
+    "Teacher: Zindagi aur maut mein kya farq hai?\nStudent: Zindagi mein hum mobile charge karte hain aur maut ke baad humari battery hamesha ke liye discharge ho jaati hai! 🔋⚰️😂",
+    "Husband: Tum itni taiyar kyun ho rahi ho?\nWife: Main beauty parlour ja rahi hoon.\nHusband: Theek hai, ja kar wapis zaroor aana, koi aur na le aaye dhoke se! 💄😂",
+    "Santa: Main ek aisi machine banaunga jismein idhar se aloo daalunga, udhar se sona niklega!\nBanta: Arre, ye idea toh kisi aur ne pehle hi de diya hai! 🥔✨😂",
+    "Wife: Suno, agar main kho gayi toh tum kya karoge?\nHusband: Main akhbaar mein ad dunga.\nWife: Kya likhoge?\nHusband: Jisko mile, wo khud rakhe! 📰😂",
+    "Teacher: Class, shanti banaye rakho!\nStudent: Sir, Shanti toh aaj chutti par hai, Pooja se kaam chala lijiye! 🕊️😂",
+    "Teacher: '2+2 kitna?' Pappu: 'Sir GST lagega kya?' 😂",
+    "Maa: 'Padhai kar!' Main: 'Housie AI se padh raha hoon!' 📖😅",
+    "Boss: 'AI se kaam karwao!' Main: *boss ko replace kar doon kya?* 🤖😂",
+    "Exam mein question: '8 ko ulta karo.' Student ne paper ulta kar diya! 😂",
+    "Programmer ki girlfriend: 'Mujhse pyar karte ho?' Programmer: 'True!' 🖥️💕😂",
+    "WiFi ka naam 'Sharma Ji Ka Beta' rakh do — sab connect karne ki koshish karenge! 📶😂"
+  ]
+};
+const MO = {
+  e: ['"The only way to do great work is to love what you do." — Steve Jobs ✨','"In the middle of every difficulty lies opportunity." — Einstein 💡','"Dream big. Work hard. Stay humble." 🚀','"Code is poetry written in logic." 💻','"Success is not final, failure is not fatal — it is the courage to continue that counts." — Churchill 💪','"Every expert was once a beginner." 🌱'],
+  h: ['"Mushkilein aati hain toh hausla mat haaro — tumhe strong bana rahi hain!" 💪','"Sapne bade rakhna, mehnat karo — sab mumkin hai!" 🌟','"Zindagi mein shortcuts nahi — bas ek step at a time!" 🔥','"Code likhna shayari jaisi hai — ek baar seekh lo, duniya badal do!" 💻','"Failure ek temporary state hai — give up karna permanent hai." 🚀','"Roz thoda behtar bano — 1% improvement, 365 din = 37x behtar!" 📈']
+};
+const FA = {
+  e: ["🍯 Honey never spoils! 3000-year-old Egyptian honey was still perfectly edible!","🧠 Your brain uses 20% of your body's energy but is only 2% of your weight!","🐙 An octopus has 3 hearts, blue blood, and 9 brains!","⚡ Lightning strikes Earth ~100 times per second — 8.6 million times per day!","🌊 The ocean contains more artifacts than all the world's museums combined!","🔬 There are more atoms in a grain of sand than stars in the Milky Way!"],
+  h: ["🍯 Shahed kabhi kharab nahi hoti! 3000 saal purani Egyptian shahed bhi khane layak thi.","🧠 Dimaag 2.5 petabytes tak data store kar sakta hai — 3 million ghante ki movies!","🐙 Octopus ke 3 dil hain, neela khoon hai, aur 9 dimaag hain!","⚡ Bijli prithvi par ek second mein 100 baar girti hai!","🔬 Ek reth ke dane mein Milky Way ke taaron se zyada atoms hain!"]
+};
+
+const KB = {
+  'quantum computing': { e: "🤯 **Quantum Computing** uses *qubits* that can be 0 AND 1 simultaneously (superposition). While a classical bit is like a coin (heads or tails), a qubit is a spinning coin!\n\n🔹 Key concepts: Superposition, Entanglement, Quantum gates\n🔹 Used for: Cryptography, Drug discovery, Climate modeling\n🔹 Companies: IBM, Google (Sycamore), D-Wave", h: "🤯 Quantum Computing qubits 0 aur 1 dono ek saath ho sakte hain (superposition). IBM, Google is par kaam kar rahe hain — yeh future ki technology hai!" },
+  'black hole': { e: "🌌 **Black Holes** are regions where gravity is so powerful that even light cannot escape!\n\n🔹 Event Horizon: The point of no return\n🔹 Singularity: Infinite density at the center\n🔹 Time Dilation: Time slows near a black hole\n🔹 Hawking Radiation: Tiny radiation they emit!", h: "🌌 Black hole ek aisi jagah hai jahan gravity itni zyada hoti hai ki light bhi escape nahi kar sakti! Wahan time bhi slow ho jata hai — Einstein ki relativity!" },
+  'relativity': { e: "⏳ **Theory of Relativity** by Einstein:\n\n1️⃣ **Special Relativity** (1905): Time slows at high speed. Formula: **E = mc²**\n2️⃣ **General Relativity** (1915): Massive objects warp spacetime, causing gravity.", h: "⏳ Einstein ki Relativity:\n1. Special: Speed badhne se time slow ho jata hai! E = mc²\n2. General: Badi cheezein space-time ko curve karti hain — isi se gravity!" },
+  'machine learning': { e: "🤖 **Machine Learning** trains systems to learn from data!\n\n🔹 Types: Supervised, Unsupervised, Reinforcement Learning\n🔹 Neural Networks: Inspired by the human brain\n🔹 Deep Learning: Neural nets with many layers\n🔹 Applications: Image recognition, LLMs, Self-driving cars", h: "🤖 Machine Learning mein computer data se khud seekhta hai! 3 types: Supervised, Unsupervised, Reinforcement. Neural networks brain ki tarah kaam karte hain!" },
+  'blockchain': { e: "⛓️ **Blockchain** is a distributed, immutable ledger!\n\n🔹 Blocks: Each block contains data + hash of the previous block\n🔹 Decentralized: No single authority\n🔹 Smart Contracts: Self-executing code on-chain\n🔹 Applications: Crypto, Supply chain, Voting systems", h: "⛓️ Blockchain ek distributed ledger hai jahan transactions change-proof hain! Har block mein previous block ka hash hota hai. Bitcoin aur Ethereum isi par hain!" },
+  'pythagoras': { e: "📐 **Pythagorean Theorem:** a² + b² = c²\n\n🔹 a, b = legs of right triangle\n🔹 c = hypotenuse (longest side)\n🔹 Triples: (3,4,5), (5,12,13), (8,15,17), (7,24,25)!", h: "📐 Pythagorean Theorem: a² + b² = c²\nRight triangle mein: hypotenuse ka square = dono sides ke squares ka sum!" },
+  'newton': { e: "⚙️ **Newton's Three Laws:**\n\n1️⃣ **Inertia:** Object at rest stays at rest unless acted upon\n2️⃣ **F = ma:** Force = Mass × Acceleration\n3️⃣ **Action-Reaction:** Every action has equal & opposite reaction 🚀", h: "⚙️ Newton ke 3 Laws:\n1. Inertia: Jab tak force na lage, object nahi hilta\n2. F = ma\n3. Har action ka equal opposite reaction! 🚀" },
+  'dna': { e: "🧬 **DNA** is the blueprint of life!\n\n🔹 Double helix (Watson & Crick, 1953)\n🔹 4 bases: A, T, G, C\n🔹 ~3 billion base pairs in human DNA\n🔹 If stretched out, your DNA would reach the Sun and back ~300 times!", h: "🧬 DNA zindagi ka blueprint hai! Double helix mein 4 bases: A, T, G, C. Human DNA 3 billion base pairs ka hai!" },
+  'internet': { e: "🌐 **How the Internet Works:**\n\n🔹 TCP/IP: Core communication protocol\n🔹 DNS: Converts domain names to IP addresses\n🔹 HTTP/HTTPS: Protocol for web pages\n🔹 Routers: Direct data packets\n🔹 Data travels as packets — each possibly taking different routes!", h: "🌐 Internet TCP/IP par kaam karta hai! DNS domain names ko IP mein convert karta hai. Data packets ki form mein travel karta hai. HTTP/HTTPS web ke liye hai!" },
+  'sorting': { e: "📊 **Sorting Algorithms:**\n\n| Algorithm | Average | Space |\n|-----------|---------|-------|\n| Bubble Sort | O(n²) | O(1) |\n| Merge Sort | O(n log n) | O(n) |\n| Quick Sort | O(n log n) | O(log n) |\n| Heap Sort | O(n log n) | O(1) |\n\nMerge Sort is stable & reliable for large data!", h: "📊 Sorting:\n- Bubble: O(n²) — slow\n- Merge: O(n log n) — stable\n- Quick: O(n log n) avg — fast\n- Heap: O(n log n) in-place!" },
+  'calculus': { e: "∫ **Calculus** — the math of change!\n\n🔹 **Differentiation:** d/dx(xⁿ) = nxⁿ⁻¹\n🔹 **Integration:** ∫xⁿ dx = xⁿ⁺¹/(n+1) + C\n🔹 **Applications:** Physics (velocity, acceleration), Engineering, Economics", h: "∫ Calculus change ka math hai!\n- Differentiation: d/dx(xⁿ) = nxⁿ⁻¹\n- Integration: ∫xⁿ dx = xⁿ⁺¹/(n+1) + C\nPhysics, engineering sab mein use hota hai!" },
+  'photosynthesis': { e: "🌿 **Photosynthesis** — how plants make food!\n\n6CO₂ + 6H₂O + Light → C₆H₁₂O₆ + 6O₂\n\n🔹 Chlorophyll absorbs red & blue light\n🔹 Plants produce ~150 billion tonnes of sugar yearly!", h: "🌿 Photosynthesis: 6CO₂ + 6H₂O + Light → C₆H₁₂O₆ + 6O₂\nPlants suraj ki roshni se sugar aur oxygen banate hain!" },
+  'gravity': { e: "🍎 **Gravity** — the weakest but longest-range fundamental force!\n\n🔹 Newton: F = Gm₁m₂/r²\n🔹 Einstein: Gravity = curvature of spacetime\n🔹 Gravitational waves detected in 2015!\n🔹 Escape velocity from Earth = 11.2 km/s", h: "🍎 Gravity: Newton ne bataya F = Gm₁m₂/r². Einstein ne kaha gravity spacetime ka moodna hai. Earth se escape ke liye 11.2 km/s speed chahiye!" },
+  'climate': { e: "🌍 **Climate Change:**\n\n🔹 Greenhouse gases (CO₂, CH₄) trap heat\n🔹 Earth +1.2°C since pre-industrial times\n🔹 Effects: Rising seas, extreme weather, extinction\n🔹 Paris Agreement: Limit to 1.5°C above pre-industrial", h: "🌍 Climate Change: CO₂ aur CH₄ heat trap karte hain. Temperature 1.2°C bad gaya. Rising sea levels, extreme weather — solar aur wind se rok sakte hain!" },
+  'statistics': { e: "📈 **Statistics Basics:**\n\n🔹 Mean = Sum ÷ Count\n🔹 Median = Middle value (sorted)\n🔹 Mode = Most frequent value\n🔹 Variance = Average squared diff from mean\n🔹 Standard Deviation = √Variance\n🔹 Normal Distribution: 68-95-99.7 rule!", h: "📈 Statistics:\n- Mean = average\n- Median = sorted middle value\n- Mode = sabse zyada aane wala\n- Standard Deviation = spread measure\nML mein bhi bahut kaam aata hai!" },
+  'instagram': { aliases: ['instagram', 'insta', 'ig'], e: "📸 **Instagram (IG):**\n\n🔹 **What it is:** A global photo and video sharing social network owned by **Meta Platforms** (Facebook).\n🔹 **Founded:** October 2010 by Kevin Systrom & Mike Krieger, acquired by Facebook in 2012 for $1 Billion.\n🔹 **Core Features:** Stories (24h), Reels (short-form video), Feed Posts & Carousels, DMs, and Explore feed.\n🔹 **Scale:** Over **2.4 Billion active users** worldwide!\n🔹 **Tech Stack:** Powered by **Python (Django)** backend and React Native mobile apps.", h: "📸 **Instagram:**\n\n🔹 **Kya hai:** Duniya ka sabse popular photo aur video sharing social media app hai, jo **Meta** (Facebook) ka hissa hai.\n🔹 **Kisne banaya:** 2010 mein Kevin Systrom aur Mike Krieger ne banaya tha, phir 2012 mein Facebook ne $1 Billion mein khareeda.\n🔹 **Features:** Stories (24 ghante), Reels (viral short videos), Photos/Videos, DMs aur Explore page.\n🔹 **Scale:** 2.4 Billion se zyada log ise use karte hain!\n🔹 **Tech:** Iska backend **Python (Django)** par bana hai aur mobile app **React Native** par chalta hai!" },
+  'coding': { aliases: ['coding', 'code', 'programming', 'programmer', 'program', 'how to code', 'learn coding'], e: "💻 **Coding (Computer Programming):**\n\n🔹 **What it is:** Coding is writing instructions in programming languages that computers understand and execute to build software, games, websites, and artificial intelligence.\n\n🔹 **How it works:**\n  1. **Source Code:** You write logic in human-readable languages (Python, JavaScript, C++, etc.).\n  2. **Translation:** A compiler or interpreter converts it into binary machine code (0s and 1s).\n  3. **Execution:** The CPU executes instructions at billions of operations per second!\n\n🔹 **What you can build:** Websites, Mobile Apps, Games (Minecraft, GTA), AI Assistants (like Housie!), and Operating Systems.\n\n💡 **Best language to start with:** **Python** (clean syntax & AI) or **JavaScript** (interactive web)!", h: "💻 **Coding (Programming) kya hai:**\n\n🔹 **Simple shabdon mein:** Coding ka matlab computer ko instructions dena hai. Computer humari normal bhasha nahi samajhta, isliye hum programming languages (jaise Python, JavaScript, C++) use karke usse kaam karwate hain!\n\n🔹 **Kaise kaam karta hai:**\n  1. Aap code likhte ho (Source Code).\n  2. Compiler ya Interpreter use machine language (0s aur 1s - binary) mein badalta hai.\n  3. Processor use run karke app, game ya website chalata hai!\n\n🔹 **Coding se kya banta hai:** Websites, Apps, Video Games (Minecraft, GTA), AI Robots aur Housie jaise assistants!\n\n💡 **Seekhna shuru kaise karein:** **Python** se shuru karo — yeh seekhne mein sabse aasan aur sabse powerful hai!" },
+  'python': { aliases: ['python', 'python3', 'py'], e: "🐍 **Python Programming Language:**\n\n🔹 Created by **Guido van Rossum** in 1991.\n🔹 **Why it's #1:** Ultra-readable syntax, massive library ecosystem, and beginner-friendly!\n🔹 **Used for:** AI, Machine Learning, Data Science, Backend Web (Django/Flask), Automation.\n🔹 Fun fact: Named after 'Monty Python's Flying Circus', NOT the snake!", h: "🐍 **Python Language:**\n\n🔹 1991 mein Guido van Rossum ne banayi thi.\n🔹 Duniya ki sabse popular language hai — kyunki iska syntax English jaisa simple hai!\n🔹 AI, Machine Learning, Data Science, aur Web development (Django/Flask) mein sabse aage hai.\n🔹 Housie AI ka math engine bhi Python se chalta hai! 🚀" },
+  'javascript': { aliases: ['javascript', 'js'], e: "💛 **JavaScript (JS):**\n\n🔹 Created by **Brendan Eich** in just 10 days in May 1995!\n🔹 **The language of the web:** Powers 98%+ of all websites on the planet.\n🔹 **Full Stack:** Runs in browsers (React, Vue) and servers (Node.js).", h: "💛 **JavaScript (JS):**\n\n🔹 1995 mein Brendan Eich ne sirf 10 din mein banayi thi!\n🔹 Internet ki 98% websites JavaScript par chalti hain.\n🔹 Frontend (React) aur Backend (Node.js) dono jagah use hoti hai!" },
+  'minecraft': { aliases: ['minecraft', 'mojang', 'steve', 'creeper'], e: "⛏️ **Minecraft:**\n\n🔹 The best-selling video game of all time (over 300 Million copies sold!), developed by Mojang Studios (Markus 'Notch' Persson) and owned by Microsoft.\n🔹 A 3D sandbox where players explore, mine, craft, and survive against Creepers, Zombies, and the Ender Dragon!\n🔹 And my background is inspired by the gorgeous Minecraft world! 🌲⛏️", h: "⛏️ **Minecraft:**\n\n🔹 Duniya ka sabse zyada bikne wala video game — 300 Million se zyada copies sold!\n🔹 Mojang ne banaya aur Microsoft ne khareeda.\n🔹 Blocks tod kar ghar, castles, aur machines bana sakte ho!\n🔹 Aur haan — mera chat background bhi Minecraft se inspired hai! 🌲⛏️" }
+};
+const APPS_KB = {"tiktok": {"aliases": ["tiktok", "tik tok"], "e": "🎵 **TikTok:**\n\n🔹 **What it is:** A platform for creating, discovering, and sharing short-form vertical videos, famous for its viral algorithm.\n🔹 **Developer:** ByteDance (launched internationally in 2017).\n🔹 **Key Features:** For You Page (FYP) algorithm, audio syncing, creative duet/stitch tools, viral trends, and TikTok Shop.\n🔹 **Scale:** Over 1.5 Billion monthly active users worldwide!", "h": "🎵 **TikTok:**\n\n🔹 **Kya hai:** Short-form vertical video bananey aur dekhne ka world-famous platform hai jo ByteDance ne banaya hai.\n🔹 **Features:** Iska 'For You' algorithm trending aur viral videos dikhata hai. Duets, sound effects aur video filters iske main features hain!\n🔹 **Scale:** Duniya bhar mein 1.5 Billion se zyada active users hain."}, "whatsapp": {"aliases": ["whatsapp", "wa"], "e": "💬 **WhatsApp:**\n\n🔹 **What it is:** An internationally popular instant messaging app providing end-to-end encrypted text, voice, and video communication.\n🔹 **Owner:** Meta (Facebook), acquired in 2014 for ~$19 Billion.\n🔹 **Key Features:** End-to-end encryption, voice/video group calls, WhatsApp Web, Status updates, and Channels.\n🔹 **Scale:** Over 2.7 Billion active users globally!", "h": "💬 **WhatsApp:**\n\n🔹 **Kya hai:** Duniya ka sabse bada messaging app hai jo end-to-end encryption ke saath chat, voice aur video call provide karta hai.\n🔹 **Owner:** Meta (Facebook).\n🔹 **Features:** Secure chat, group video calls, status updates aur WhatsApp Web.\n🔹 **Scale:** 2.7 Billion se zyada log ise daily use karte hain!"}, "instagram": {"aliases": ["instagram", "insta", "ig"], "e": "📸 **Instagram (IG):**\n\n🔹 **What it is:** A visual-first social network by Meta focused on photo sharing, short videos (Reels), and disappearing daily stories.\n🔹 **Founded:** 2010 by Kevin Systrom & Mike Krieger; acquired by Facebook in 2012.\n🔹 **Key Features:** Feed posts, 24-hour Stories, Reels algorithm, Direct Messages (DMs), and Explore tab.\n🔹 **Scale:** Over 2.4 Billion active users worldwide!", "h": "📸 **Instagram:**\n\n🔹 **Kya hai:** Meta ka visual social network jo photo sharing, viral Reels aur 24-ghante ki Stories ke liye mashhoor hai.\n🔹 **Features:** Reels, photo filters, DMs, Explore page aur creator tools.\n🔹 **Scale:** Duniya bhar mein 2.4 Billion se zyada users hain!"}, "facebook": {"aliases": ["facebook", "fb", "meta"], "e": "👥 **Facebook:**\n\n🔹 **What it is:** A major social networking platform founded by Mark Zuckerberg in 2004, allowing users to share posts, join groups, and connect globally.\n🔹 **Parent Company:** Meta Platforms.\n🔹 **Key Features:** News Feed, Facebook Groups, Marketplace, Watch, and Pages for creators/businesses.\n🔹 **Scale:** Over 3 Billion monthly active users — the largest social network in history!", "h": "👥 **Facebook:**\n\n🔹 **Kya hai:** Mark Zuckerberg ne 2004 mein launch kiya tha. Yeh duniya ka sabse bada social network hai.\n🔹 **Features:** News Feed, Groups, Marketplace, Pages aur video watch.\n🔹 **Scale:** 3 Billion se zyada active users hain!"}, "telegram": {"aliases": ["telegram", "tg"], "e": "✈️ **Telegram:**\n\n🔹 **What it is:** A cloud-based instant messaging app recognized for its speed, privacy features, bot ecosystem, and large broadcast channels.\n🔹 **Founded:** 2013 by Nikolai and Pavel Durov.\n🔹 **Key Features:** Channels with unlimited subscribers, groups up to 200,000 members, custom bots, cloud file storage up to 2GB, and Secret Chats.", "h": "✈️ **Telegram:**\n\n🔹 **Kya hai:** Pavel Durov dwara banaya gaya ultra-fast cloud messaging app jo privacy aur large channels ke liye jaana jaata hai.\n🔹 **Features:** Unlimited members wale channels, bots, 2GB tak file sharing aur Secret Chats!"}, "snapchat": {"aliases": ["snapchat", "snap"], "e": "👻 **Snapchat:**\n\n🔹 **What it is:** A multimedia messaging app centered around ephemeral (disappearing) photos/videos, Snap Streaks, and augmented reality (AR) lenses.\n🔹 **Developer:** Snap Inc. (Evan Spiegel, Bobby Murphy).\n🔹 **Key Features:** Disappearing Snaps, AR Face Lenses, Snap Map, Stories, and Spotlight.", "h": "👻 **Snapchat:**\n\n🔹 **Kya hai:** Photos aur videos bhejne ka app jahan messages dekhne ke baad gayab ho jaate hain!\n🔹 **Features:** Mazedaar AR Lenses/Filters, Snap Streaks, Snap Map aur Stories."}, "temu": {"aliases": ["temu"], "e": "🛍️ **Temu:**\n\n🔹 **What it is:** A rapidly growing global e-commerce marketplace offering a vast range of products at heavily discounted prices directly from manufacturers.\n🔹 **Parent Company:** PDD Holdings (sister company to Pinduoduo).\n🔹 **Key Features:** Ultra-low wholesale pricing, gamified shopping rewards, and direct-from-factory shipping.", "h": "🛍️ **Temu:**\n\n🔹 **Kya hai:** Ek massive online shopping app hai jo factory se direct products heavily discounted prices par bechta hai.\n🔹 **Parent Company:** PDD Holdings."}, "chatgpt": {"aliases": ["chatgpt", "chat gpt", "openai"], "e": "🤖 **ChatGPT:**\n\n🔹 **What it is:** An advanced AI assistant developed by OpenAI capable of conversational reasoning, answering questions, writing code, and creative work.\n🔹 **Launched:** November 2022 by OpenAI (Sam Altman).\n🔹 **Underlying Tech:** Generative Pre-trained Transformers (GPT-4o, GPT-4).\n🔹 **Features:** Voice conversations, web browsing, code execution, image generation (DALL-E), and custom GPTs.", "h": "🤖 **ChatGPT:**\n\n🔹 **Kya hai:** OpenAI ka banaya gaya world-famous generative AI assistant hai jo sawaalon ke jawab, coding, aur essay writing kar sakta hai.\n🔹 **Features:** Voice chat, problem solving, programming help aur creative writing!"}, "capcut": {"aliases": ["capcut", "cap cut"], "e": "🎬 **CapCut:**\n\n🔹 **What it is:** An intuitive, all-in-one video editing app developed by ByteDance, widely used to create and format viral videos for TikTok, Reels, and YouTube Shorts.\n🔹 **Key Features:** Trending templates, auto-captions, keyframe animation, background removal, and speed ramping.", "h": "🎬 **CapCut:**\n\n🔹 **Kya hai:** ByteDance ka video editing app hai jo Reels aur TikTok videos banane ke liye duniya bhar mein sabse popular hai.\n🔹 **Features:** Auto-subtitles, trending templates, background remove aur audio effects."}, "duolingo": {"aliases": ["duolingo"], "e": "🦉 **Duolingo:**\n\n🔹 **What it is:** An educational app that turns learning new languages into a game through interactive, bite-sized daily lessons and streaks.\n🔹 **Mascot:** Duo the green owl.\n🔹 **Features:** 40+ languages (Spanish, French, Japanese, etc.), gamification with XP and leaderboards, and daily practice streaks.", "h": "🦉 **Duolingo:**\n\n🔹 **Kya hai:** Nayi bhashayein (English, Spanish, French etc.) seekhne ka gamified app hai jahan chhote-chhote lessons aur streaks se padhaaya jaata hai.\n🔹 **Mascot:** Duo the green owl!"}, "uber": {"aliases": ["uber"], "e": "🚗 **Uber:**\n\n🔹 **What it is:** A global ride-hailing pioneer connecting passengers with drivers for on-demand car rides, auto-rickshaws, and motorbike taxis.\n🔹 **Founded:** 2009 by Travis Kalanick & Garrett Camp.\n🔹 **Features:** Real-time GPS driver tracking, cashless digital payments, Uber Auto, Uber Moto, and safety trip-sharing.", "h": "🚗 **Uber:**\n\n🔹 **Kya hai:** On-demand taxi aur cab booking app hai jo GPS ke zariye turant car, bike ya auto connect karta hai.\n🔹 **Features:** Live GPS tracking, cashless payment aur trip safety sharing."}, "linkedin": {"aliases": ["linkedin"], "e": "💼 **LinkedIn:**\n\n🔹 **What it is:** The world's largest professional networking platform, designed for career development, job hunting, recruitment, and B2B business connections.\n🔹 **Parent Company:** Microsoft (acquired in 2016 for $26.2 Billion).\n🔹 **Features:** Professional profile/resume, job listings, networking posts, and LinkedIn Learning.", "h": "💼 **LinkedIn:**\n\n🔹 **Kya hai:** Microsoft ka professional social network hai jahan job search, hiring, business networking aur career building hoti hai."}, "cash app": {"aliases": ["cash app", "cashapp"], "e": "💵 **Cash App:**\n\n🔹 **What it is:** A popular peer-to-peer mobile payment service developed by Block, Inc. (formerly Square) allowing users to transfer money, buy stocks, and trade Bitcoin.\n🔹 **Features:** $Cashtags for easy sending, free debit Cash Card, and Bitcoin trading.", "h": "💵 **Cash App:**\n\n🔹 **Kya hai:** Block (Square) ka peer-to-peer payment app hai jisse log aapas mein paise transfer, stocks invest aur Bitcoin buy karte hain."}, "netflix": {"aliases": ["netflix"], "e": "🍿 **Netflix:**\n\n🔹 **What it is:** The world's leading subscription-based video streaming service offering an expansive catalog of films, TV shows, anime, and original productions (Netflix Originals).\n🔹 **Iconic Originals:** Stranger Things, Squid Game, Wednesday, Money Heist.\n🔹 **Scale:** Over 270 Million paid subscribers globally.", "h": "🍿 **Netflix:**\n\n🔹 **Kya hai:** Duniya ka sabse bada on-demand OTT streaming platform hai jahan movies, web series aur award-winning shows milte hain (jaise Stranger Things, Squid Game)."}, "youtube": {"aliases": ["youtube", "yt"], "e": "▶️ **YouTube:**\n\n🔹 **What it is:** The world's largest video-sharing platform owned by Google, hosting billions of user-uploaded videos, music, gaming streams, and educational content.\n🔹 **Founded:** 2005; acquired by Google in 2006 for $1.65 Billion.\n🔹 **Features:** Long-form videos, YouTube Shorts, YouTube Live, and monetization for content creators.\n🔹 **Scale:** 2.5+ Billion monthly active users!", "h": "▶️ **YouTube:**\n\n🔹 **Kya hai:** Google ka world-famous video platform jahan har minute 500 ghante ka video upload hota hai!\n🔹 **Features:** Videos, Shorts, Live streaming aur Creator Monetization."}, "amazon prime video": {"aliases": ["prime video", "amazon prime video", "amazon prime"], "e": "🎬 **Amazon Prime Video:**\n\n🔹 **What it is:** Amazon's premium on-demand video streaming platform offering blockbuster movies, hit TV shows, sports broadcasts, and Prime Originals.\n🔹 **Popular Series:** The Boys, The Rings of Power, Reacher, Mirzapur, The Family Man.\n🔹 **Access:** Included with Amazon Prime membership.", "h": "🎬 **Amazon Prime Video:**\n\n🔹 **Kya hai:** Amazon ka streaming app hai jahan movies aur hit web series (The Boys, Mirzapur, Family Man) milti hain."}, "disney+": {"aliases": ["disney+", "disney plus", "disney"], "e": "🏰 **Disney+:**\n\n🔹 **What it is:** The official home for streaming content from Disney, Pixar, Marvel, Star Wars, and National Geographic.\n🔹 **Key Franchises:** Marvel Cinematic Universe, Star Wars (The Mandalorian), Disney Animated Classics, and Pixar movies.", "h": "🏰 **Disney+ (Hotstar):**\n\n🔹 **Kya hai:** Disney ka official streaming service hai jahan Marvel, Star Wars, Pixar aur Disney ke animations milte hain."}, "max": {"aliases": ["max", "hbo max", "hbo"], "e": "📺 **Max (formerly HBO Max):**\n\n🔹 **What it is:** Warner Bros. Discovery's premium streaming platform featuring HBO's critically acclaimed television series, Warner Bros. movies, and DC Universe films.\n🔹 **Famous Titles:** Game of Thrones, House of the Dragon, Succession, The Last of Us.", "h": "📺 **Max (HBO Max):**\n\n🔹 **Kya hai:** Warner Bros aur HBO ka OTT platform hai jo Game of Thrones, House of the Dragon aur DC movies ke liye famous hai."}, "spotify": {"aliases": ["spotify"], "e": "🎧 **Spotify:**\n\n🔹 **What it is:** The world's most popular digital music and podcast streaming service providing access to over 100 Million tracks.\n🔹 **Key Features:** Discover Weekly, Spotify Wrapped, curated algorithmic playlists, podcasts, and audiobooks.\n🔹 **Scale:** Over 600 Million monthly active listeners!", "h": "🎧 **Spotify:**\n\n🔹 **Kya hai:** Duniya ka sabse bada music aur podcast streaming app hai jahan 100 Million se zyada songs aur personal playlists milti hain!"}, "youtube music": {"aliases": ["youtube music", "yt music"], "e": "🎵 **YouTube Music:**\n\n🔹 **What it is:** Google's dedicated music streaming app built directly upon YouTube's massive audio catalog, music videos, and live concert recordings.\n🔹 **Features:** Background play, offline downloads, smart lyric view, and personalized radio stations.", "h": "🎵 **YouTube Music:**\n\n🔹 **Kya hai:** Google ka dedicated music player hai jo YouTube ke audio aur live concert database se connected hai."}, "candy crush saga": {"aliases": ["candy crush", "candy crush saga"], "e": "🍬 **Candy Crush Saga:**\n\n🔹 **What it is:** A legendary match-three puzzle video game developed by King, remaining one of the highest-grossing mobile games for over a decade.\n🔹 **Gameplay:** Swap colored candies on a game board to match three or more of the same color and clear objectives across thousands of levels.", "h": "🍬 **Candy Crush Saga:**\n\n🔹 **Kya hai:** King company ka banaya match-3 puzzle game hai jahan same color ki candies match karke levels paar karte hain!"}, "roblox": {"aliases": ["roblox"], "e": "🧱 **Roblox:**\n\n🔹 **What it is:** An online gaming platform and game creation system that allows users to program games and play worlds created by other users using the Lua programming language.\n🔹 **Scale:** Over 70 Million daily active players worldwide!", "h": "🧱 **Roblox:**\n\n🔹 **Kya hai:** Ek gaming platform hai jahan players doosre logon ke banaye hue hazaron virtual games khelte hain ya khud game design karte hain (Lua code se)."}, "minecraft": {"aliases": ["minecraft", "mc"], "e": "⛏️ **Minecraft:**\n\n🔹 **What it is:** The best-selling video game of all time (300M+ copies), developed by Mojang Studios (Microsoft), featuring a 3D blocky procedural sandbox world.\n🔹 **Modes:** Survival (fight mobs, mine, craft) and Creative (unlimited building blocks).\n🔹 **Note:** Housie AI's wallpaper is inspired by the gorgeous Minecraft movie world! 🌲⛏️", "h": "⛏️ **Minecraft:**\n\n🔹 **Kya hai:** Duniya ka sabse famous 3D block sandbox game jahan aap building, crafting aur mining karte ho! Housie ka background bhi Minecraft se inspired hai."}, "pubg mobile": {"aliases": ["pubg", "pubg mobile", "bgmi"], "e": "🔫 **PUBG Mobile (Battlegrounds Mobile):**\n\n🔹 **What it is:** A premier multiplayer battle royale shooter game where 100 players parachute onto an island and fight to be the last person or squad standing.\n🔹 **Developer:** Lightspeed & Quantum Studio / Krafton.", "h": "🔫 **PUBG Mobile / BGMI:**\n\n🔹 **Kya hai:** 100 players ka battle royale shooter game jahan island par land karke weapons loot kar last survival tak ladte hain! 'Winner Winner Chicken Dinner'!"}, "geometry dash": {"aliases": ["geometry dash"], "e": "🔺 **Geometry Dash:**\n\n🔹 **What it is:** A rhythm-based action platformer video game developed by RobTop Games known for its energetic electronic soundtrack and challenging obstacle levels.", "h": "🔺 **Geometry Dash:**\n\n🔹 **Kya hai:** Ek rhythm-based jumping platformer game hai jahan music ki beat par obstacles aur spikes se bachna hota hai."}, "stardew valley": {"aliases": ["stardew valley", "stardew"], "e": "🌾 **Stardew Valley:**\n\n🔹 **What it is:** An acclaimed open-ended country-life farming simulation RPG developed by ConcernedApe (Eric Barone), where players rebuild their grandfather's overgrown farm.", "h": "🌾 **Stardew Valley:**\n\n🔹 **Kya hai:** Ek peaceful farming RPG game hai jahan kheti, janwar paalna, mining aur gaon ke logon se dosti karke farm banate hain."}, "block blast": {"aliases": ["block blast"], "e": "🧩 **Block Blast:**\n\n🔹 **What it is:** A viral, offline puzzle game where players place various geometric shapes onto an 8x8 grid to form and clear complete horizontal and vertical lines.", "h": "🧩 **Block Blast:**\n\n🔹 **Kya hai:** Ek addictive block puzzle game hai jisme grid par blocks fit karke rows aur columns clear karni hoti hain."}, "messenger": {"aliases": ["messenger", "facebook messenger", "fb messenger"], "e": "💬 **Messenger:**\n\n🔹 **What it is:** Meta's standalone instant messaging app spun off from Facebook, supporting text chats, audio/video calls, and cross-platform messaging with Instagram.", "h": "💬 **Messenger:**\n\n🔹 **Kya hai:** Facebook ka dedicated chat app hai jo free text, video calling aur group chats ke liye use hota hai."}, "google gemini": {"aliases": ["gemini", "google gemini", "bard"], "e": "✨ **Google Gemini:**\n\n🔹 **What it is:** Google's multimodal AI assistant powered by Gemini large language models, designed to understand text, code, audio, image, and video inputs to assist with learning, coding, and planning.", "h": "✨ **Google Gemini:**\n\n🔹 **Kya hai:** Google ka advanced multimodal AI model hai jo text, images, aur coding sab kuch samajh kar answers deta hai."}, "claude": {"aliases": ["claude", "anthropic"], "e": "🧠 **Claude:**\n\n🔹 **What it is:** A next-generation AI assistant developed by Anthropic, engineered for safe, helpful, and nuanced analysis, coding, and complex reasoning across large documents.", "h": "🧠 **Claude:**\n\n🔹 **Kya hai:** Anthropic company ka AI assistant hai jo coding, research aur reasoning ke liye bahut accurate aur smart mana jaata hai."}, "microsoft teams": {"aliases": ["teams", "microsoft teams", "ms teams"], "e": "🏢 **Microsoft Teams:**\n\n🔹 **What it is:** A enterprise collaboration workspace combining video meetings, workplace chat, file sharing, and Office 365 app integrations.", "h": "🏢 **Microsoft Teams:**\n\n🔹 **Kya hai:** Microsoft ka corporate communication app hai jo video conferences, office chats aur file sharing ke liye use hota hai."}, "microsoft authenticator": {"aliases": ["microsoft authenticator", "authenticator"], "e": "🔐 **Microsoft Authenticator:**\n\n🔹 **What it is:** A security application that provides two-factor authentication (2FA) and passwordless phone sign-ins to safeguard online accounts against unauthorized access.", "h": "🔐 **Microsoft Authenticator:**\n\n🔹 **Kya hai:** 2-Factor Authentication (2FA) security app hai jo accounts ko hacker se bachane ke liye security code generate karta hai."}, "threads": {"aliases": ["threads", "meta threads"], "e": "🧵 **Threads:**\n\n🔹 **What it is:** A text-focused microblogging platform built by the Instagram team at Meta, designed for public conversations and real-time updates as a competitor to X.", "h": "🧵 **Threads:**\n\n🔹 **Kya hai:** Instagram (Meta) ka text-based microblogging app hai jo X (Twitter) ki tarah thoughts share karne ke liye bana hai."}, "zoom": {"aliases": ["zoom"], "e": "📹 **Zoom:**\n\n🔹 **What it is:** A cloud-based video communications app offering HD video conferencing, virtual webinars, breakout rooms, and remote screen sharing.", "h": "📹 **Zoom:**\n\n🔹 **Kya hai:** Online video meetings, webinars aur school classes ke liye sabse zyada use hone wala video calling platform hai."}, "aliexpress": {"aliases": ["aliexpress", "ali express"], "e": "📦 **AliExpress:**\n\n🔹 **What it is:** An online retail marketplace owned by Alibaba Group, connecting international buyers directly to manufacturers and small businesses in China for low-cost goods.", "h": "📦 **AliExpress:**\n\n🔹 **Kya hai:** Alibaba ka global shopping app hai jahan Chinese manufacturers se direct saste daam par samaan mangwaya jaata hai."}, "shein": {"aliases": ["shein"], "e": "👗 **Shein:**\n\n🔹 **What it is:** A fast-fashion e-commerce giant renowned for affordable, on-trend apparel, accessories, and rapid catalog updates driven by algorithmic trend analysis.", "h": "👗 **Shein:**\n\n🔹 **Kya hai:** World-famous fast-fashion shopping app hai jo trendy kapde aur accessories saste rates mein bechta hai."}, "pinterest": {"aliases": ["pinterest"], "e": "📌 **Pinterest:**\n\n🔹 **What it is:** A visual bookmarking discovery engine where users collect, curate, and share ideas for recipes, interior design, fashion, and DIY projects on virtual 'Boards'.", "h": "📌 **Pinterest:**\n\n🔹 **Kya hai:** Visual ideas aur photo inspiration ka search engine hai jahan recipes, fashion aur home design ke pins save karte hain."}, "x (formerly twitter)": {"aliases": ["x", "twitter", "tweet"], "e": "🐦 **X (formerly Twitter):**\n\n🔹 **What it is:** A real-time global microblogging social network owned by Elon Musk, centered on public conversations, breaking news, threads, and Spaces audio rooms.", "h": "🐦 **X (Twitter):**\n\n🔹 **Kya hai:** Elon Musk ka microblogging platform jahan breaking news, tweets aur viral debates hoti hain."}, "canva": {"aliases": ["canva"], "e": "🎨 **Canva:**\n\n🔹 **What it is:** A user-friendly online graphic design platform offering thousands of customizable templates for social media posts, presentations, posters, and logos.", "h": "🎨 **Canva:**\n\n🔹 **Kya hai:** Bina professional editing seekhe posters, YouTube thumbnails, resumes aur social media graphics banane ka aasan design tool hai."}, "subway surfers": {"aliases": ["subway surfers", "subway surfer"], "e": "🛹 **Subway Surfers:**\n\n🔹 **What it is:** The world's most downloaded endless runner mobile game (by SYBO Games), where players run along train tracks dodging oncoming trains and the Grumpy Inspector.", "h": "🛹 **Subway Surfers:**\n\n🔹 **Kya hai:** All-time hit endless running game jahan trains par bhaag kar coins collect karte hain aur inspector se bachte hain!"}, "amazon shopping": {"aliases": ["amazon", "amazon shopping"], "e": "📦 **Amazon:**\n\n🔹 **What it is:** The world's largest online e-commerce retailer offering millions of products with fast delivery via Amazon Prime, customer reviews, and secure checkout.", "h": "📦 **Amazon:**\n\n🔹 **Kya hai:** Jeff Bezos dwara shuru ki gayi duniya ki sabse badi shopping website aur app hai jahan electronics se le kar rashan sab milta hai."}, "phonepe": {"aliases": ["phonepe", "phone pe"], "e": "📱 **PhonePe:**\n\n🔹 **What it is:** India's leading digital payments and financial technology platform powered by UPI, enabling instant money transfers, utility bill payments, recharges, and gold investments.", "h": "📱 **PhonePe:**\n\n🔹 **Kya hai:** India ka sabse bada UPI payment app hai jisse QR code scan karke paise bheje jaate hain aur bills pay hote hain."}, "meesho": {"aliases": ["meesho"], "e": "🛍️ **Meesho:**\n\n🔹 **What it is:** An Indian social commerce marketplace that connects small manufacturers directly with consumers and resellers at zero commission.", "h": "🛍️ **Meesho:**\n\n🔹 **Kya hai:** India ka popular e-commerce app hai jo kapde aur gharelu samaan bahut saste daam par bechta hai."}, "google maps": {"aliases": ["google maps", "maps", "gmaps"], "e": "🗺️ **Google Maps:**\n\n🔹 **What it is:** A web mapping platform offering satellite imagery, real-time traffic updates, turn-by-turn GPS voice navigation, and local business discoverability.", "h": "🗺️ **Google Maps:**\n\n🔹 **Kya hai:** Google ka GPS navigation app jo raaste, live traffic aur dukaano ki location batata hai."}, "google chrome": {"aliases": ["chrome", "google chrome"], "e": "🌐 **Google Chrome:**\n\n🔹 **What it is:** The world's most widely used web browser developed by Google, known for its speed, cross-device sync, and rich web extension ecosystem.", "h": "🌐 **Google Chrome:**\n\n🔹 **Kya hai:** Google ka fast aur secure internet browser jo duniya bhar ke 65%+ computers aur mobiles par use hota hai."}, "vinted": {"aliases": ["vinted"], "e": "👗 **Vinted:**\n\n🔹 **What it is:** An online peer-to-peer marketplace app for buying, selling, and swapping secondhand clothing, vintage items, and fashion accessories.", "h": "👗 **Vinted:**\n\n🔹 **Kya hai:** Purane aur pre-loved kapde bechne aur khareedne ka popular secondhand marketplace app hai."}, "reelshort": {"aliases": ["reelshort", "reel short"], "e": "📱 **ReelShort:**\n\n🔹 **What it is:** A next-gen HD vertical streaming platform specializing in bite-sized, 1-2 minute dramatic episode series tailored for mobile screens.", "h": "📱 **ReelShort:**\n\n🔹 **Kya hai:** 1-2 minute ke vertical drama aur short episodes dekhne ka trending mobile streaming app hai."}, "free fire max": {"aliases": ["free fire", "free fire max", "ff"], "e": "🔥 **Free Fire MAX:**\n\n🔹 **What it is:** An upgraded, graphically enhanced version of Garena Free Fire featuring fast-paced 50-player battle royale matches lasting ~10 minutes.", "h": "🔥 **Free Fire MAX:**\n\n🔹 **Kya hai:** Garena ka ultra-popular battle royale game jisme 50 players parachute se land karke 10 minute mein survive karte hain."}, "ludo king": {"aliases": ["ludo king", "ludo"], "e": "🎲 **Ludo King:**\n\n🔹 **What it is:** A record-breaking Indian digital adaptation of the traditional board game Ludo, developed by Gametion Technologies with multiplayer online support.", "h": "🎲 **Ludo King:**\n\n🔹 **Kya hai:** Traditional desi Ludo board game ka digital multiplayer version jo doston ke saath online khela jaata hai."}, "doordash": {"aliases": ["doordash", "door dash"], "e": "🍔 **DoorDash:**\n\n🔹 **What it is:** The largest on-demand food delivery platform in North America, connecting customers with local eateries and convenience stores via freelance Dasher couriers.", "h": "🍔 **DoorDash:**\n\n🔹 **Kya hai:** America ka sabse bada food delivery app jo restaurants se khana order karke ghar tak deliver karta hai."}, "uber eats": {"aliases": ["uber eats", "ubereats"], "e": "🍕 **Uber Eats:**\n\n🔹 **What it is:** Uber's dedicated on-demand food delivery subsidiary leveraging its existing global driver infrastructure to deliver restaurant meals and groceries.", "h": "🍕 **Uber Eats:**\n\n🔹 **Kya hai:** Uber ka food ordering app jo local restaurants se tasty khana deliver karta hai."}, "discord": {"aliases": ["discord"], "e": "🎧 **Discord:**\n\n🔹 **What it is:** A voice, video, and text communication platform structured into invite-only servers with topic channels, immensely popular among gamers, programmers, and communities.", "h": "🎧 **Discord:**\n\n🔹 **Kya hai:** Gamers aur communities ka favorite voice aur text chat platform hai jahan custom servers aur bots hote hain."}, "reddit": {"aliases": ["reddit"], "e": "👽 **Reddit:**\n\n🔹 **What it is:** The 'front page of the internet' — a massive network of user-curated communities ('subreddits') where people discuss hobbies, share news, and upvote content.", "h": "👽 **Reddit:**\n\n🔹 **Kya hai:** Internet ka sabse bada discussion forum jahan har topic par communities (subreddits) bani hoti hain."}, "tinder": {"aliases": ["tinder"], "e": "🔥 **Tinder:**\n\n🔹 **What it is:** The pioneer location-based mobile dating app that revolutionized modern matchmaking with its intuitive 'Swipe Right' to like and 'Swipe Left' to pass mechanics.", "h": "🔥 **Tinder:**\n\n🔹 **Kya hai:** Location-based online dating app hai jo 'Swipe Right' feature se logon ko date aur connect karwata hai."}, "bumble": {"aliases": ["bumble"], "e": "🐝 **Bumble:**\n\n🔹 **What it is:** A dating and networking app designed to empower women by requiring female users to initiate the conversation first in heterosexual matches.", "h": "🐝 **Bumble:**\n\n🔹 **Kya hai:** Ek dating app hai jahan ladkiyon ko pehla message bhejna compulsory hota hai."}, "hinge": {"aliases": ["hinge"], "e": "💘 **Hinge:**\n\n🔹 **What it is:** A relationship-focused dating app that brands itself as 'designed to be deleted', encouraging meaningful connections through rich user profile prompts.", "h": "💘 **Hinge:**\n\n🔹 **Kya hai:** Long-term serious relationships ke liye banaya gaya dating app jo 'Designed to be deleted' slogan par chalta hai."}, "airbnb": {"aliases": ["airbnb"], "e": "🏡 **Airbnb:**\n\n🔹 **What it is:** A global hospitality marketplace connecting travelers looking for unique short-term stays, vacation villas, and local experiences with residential hosts.", "h": "🏡 **Airbnb:**\n\n🔹 **Kya hai:** Hotel ke bajaye logon ke ghar, villas aur rooms rent par book karne ka world-famous travel app hai."}, "booking.com": {"aliases": ["booking.com", "booking"], "e": "🏨 **Booking.com:**\n\n🔹 **What it is:** A major digital travel fare aggregator allowing travelers to search, compare, and reserve hotels, flight tickets, holiday packages, and rental cars.", "h": "🏨 **Booking.com:**\n\n🔹 **Kya hai:** Flights, hotels aur resort booking ka sabse reliable international travel app hai."}, "venmo": {"aliases": ["venmo"], "e": "💸 **Venmo:**\n\n🔹 **What it is:** A social peer-to-peer payment app owned by PayPal, popular in the US for splitting dinner bills, paying rent, and sharing payment activity with emojis.", "h": "💸 **Venmo:**\n\n🔹 **Kya hai:** America mein doston ke beech bill split karne aur instant paise bhejne ka social payment app hai."}, "paypal": {"aliases": ["paypal", "pay pal"], "e": "💳 **PayPal:**\n\n🔹 **What it is:** A pioneer global digital wallet and online payment system supporting secure transactions, currency conversions, and fraud protection worldwide.", "h": "💳 **PayPal:**\n\n🔹 **Kya hai:** Worldwide international online payments aur money transfer ka sabse trusted digital wallet hai."}, "zelle": {"aliases": ["zelle"], "e": "🏦 **Zelle:**\n\n🔹 **What it is:** A direct bank-to-bank peer-to-peer payment network integrated into thousands of US financial institutions for zero-fee, instant money transfers.", "h": "🏦 **Zelle:**\n\n🔹 **Kya hai:** US bank accounts ke beech bina kisi fee ke direct paise transfer karne ka fast payment network hai."}, "robinhood": {"aliases": ["robinhood"], "e": "📈 **Robinhood:**\n\n🔹 **What it is:** A trailblazing financial services app that pioneered zero-commission stock, ETF, options, and cryptocurrency trading for everyday retail investors.", "h": "📈 **Robinhood:**\n\n🔹 **Kya hai:** Commission-free stock market aur crypto trading app hai jo mobile par trading ko aasan banata hai."}, "coinbase": {"aliases": ["coinbase"], "e": "🪙 **Coinbase:**\n\n🔹 **What it is:** A leading publicly traded cryptocurrency exchange platform providing a secure interface to buy, sell, convert, and store digital assets like Bitcoin and Ethereum.", "h": "🪙 **Coinbase:**\n\n🔹 **Kya hai:** Bitcoin, Ethereum aur crypto khareedne aur bechne ka sabse secure global exchange hai."}, "slack": {"aliases": ["slack"], "e": "💼 **Slack:**\n\n🔹 **What it is:** A business communication hub owned by Salesforce, organizing team messaging into dedicated channels, direct messages, voice huddles, and tool integrations.", "h": "💼 **Slack:**\n\n🔹 **Kya hai:** Companies aur startups ka workplace chat platform jahan team channels aur workflow automation hoti hai."}, "notion": {"aliases": ["notion"], "e": "📝 **Notion:**\n\n🔹 **What it is:** A versatile all-in-one productivity workspace combining markdown note-taking, Kanban boards, relational databases, wikis, and AI writing tools.", "h": "📝 **Notion:**\n\n🔹 **Kya hai:** Notes lene, project manage karne, tables banane aur life organize karne ka ultimate all-in-one workspace app hai."}, "google drive": {"aliases": ["google drive", "gdrive"], "e": "☁️ **Google Drive:**\n\n🔹 **What it is:** Google's cloud storage and file synchronization service providing 15GB of free storage with deep integration into Docs, Sheets, and Slides.", "h": "☁️ **Google Drive:**\n\n🔹 **Kya hai:** Google ka cloud storage app jahan aap photos, videos aur documents online safe rakh sakte hain."}, "apple music": {"aliases": ["apple music"], "e": "🍎 **Apple Music:**\n\n🔹 **What it is:** Apple's premium ad-free audio streaming service offering over 100 Million lossless songs, Spatial Audio with Dolby Atmos, and curated Apple Music 1 radio.", "h": "🍎 **Apple Music:**\n\n🔹 **Kya hai:** Apple ka premium ad-free music app jo high-resolution lossless audio aur Dolby Atmos sound deliver karta hai."}, "soundcloud": {"aliases": ["soundcloud", "sound cloud"], "e": "☁️ **SoundCloud:**\n\n🔹 **What it is:** An online open audio distribution platform that allows independent artists, DJs, and podcasters to directly upload, share, and promote their original tracks.", "h": "☁️ **SoundCloud:**\n\n🔹 **Kya hai:** Independent singers, DJs aur rappers ka music sharing platform jahan unreleased songs aur remixes milte hain."}, "shazam": {"aliases": ["shazam"], "e": "🎵 **Shazam:**\n\n🔹 **What it is:** An audio recognition app owned by Apple that listens through your device microphone and identifies the exact song, artist, and album in seconds.", "h": "🎵 **Shazam:**\n\n🔹 **Kya hai:** Ek aisa magic app jo aas-paas baj rahe kisi bhi gaane ko sun kar uska naam aur artist 2 second mein bata deta hai!"}, "twitch": {"aliases": ["twitch"], "e": "🎮 **Twitch:**\n\n🔹 **What it is:** Amazon's live streaming titan focused primarily on video game broadcasts, esports tournaments, creative streams, and live creator-audience chats.", "h": "🎮 **Twitch:**\n\n🔹 **Kya hai:** Video game live streaming aur esports matches dekhne ka duniya ka sabse bada live video platform hai."}, "hulu": {"aliases": ["hulu"], "e": "📺 **Hulu:**\n\n🔹 **What it is:** A major US streaming service owned by Disney, hosting current-season TV episodes shortly after network broadcast along with award-winning original dramas.", "h": "📺 **Hulu:**\n\n🔹 **Kya hai:** America ka famous streaming app jahan latest TV episodes aur original movies milti hain."}, "crunchyroll": {"aliases": ["crunchyroll"], "e": "🍥 **Crunchyroll:**\n\n🔹 **What it is:** The premier international streaming platform dedicated exclusively to Japanese anime, manga, and Asian drama series with simulcasts directly from Japan.", "h": "🍥 **Crunchyroll:**\n\n🔹 **Kya hai:** Anime lovers ka jannat — Naruto, One Piece, Attack on Titan jaise hit Japanese anime shows dekhne ka official app hai!"}, "zomato": {"aliases": ["zomato"], "e": "🍕 **Zomato:**\n\n🔹 **What it is:** A multinational restaurant aggregator and food delivery company based in India, offering restaurant discovery, table reservations, and doorstep food delivery.", "h": "🍕 **Zomato:**\n\n🔹 **Kya hai:** India ka leading online food ordering app jahan se aap apne favorite restaurants se khana order kar sakte hain."}, "swiggy": {"aliases": ["swiggy"], "e": "🛵 **Swiggy:**\n\n🔹 **What it is:** An Indian on-demand delivery super-app offering restaurant food delivery, quick-commerce grocery deliveries via Instamart, and package pickup via Genie.", "h": "🛵 **Swiggy:**\n\n🔹 **Kya hai:** India ka instant delivery app jahan se khana (Food Delivery) aur 10 minute mein groceries (Instamart) aati hain."}, "instacart": {"aliases": ["instacart"], "e": "🛒 **Instacart:**\n\n🔹 **What it is:** A leading North American grocery delivery and pickup service that connects customers with personal shoppers to hand-select and deliver items from local supermarkets.", "h": "🛒 **Instacart:**\n\n🔹 **Kya hai:** Grocery shopping app jahan personal shoppers supermarket se samaan le kar aapke ghar deliver karte hain."}, "lyft": {"aliases": ["lyft"], "e": "🚗 **Lyft:**\n\n🔹 **What it is:** A prominent North American ride-hailing app providing on-demand car rides, motorized scooters, bike-sharing systems, and rental car reservations.", "h": "🚗 **Lyft:**\n\n🔹 **Kya hai:** Uber ka sabse bada competitor ride-sharing app jo America aur Canada mein cabs book karta hai."}, "waze": {"aliases": ["waze"], "e": "🚦 **Waze:**\n\n🔹 **What it is:** A community-powered GPS navigation app owned by Google that uses crowdsourced real-time reports to alert drivers of police traps, accidents, speed cameras, and road hazards.", "h": "🚦 **Waze:**\n\n🔹 **Kya hai:** Google ka community-based GPS navigation app jo live road hazards, police traps aur accidents ki alert deta hai."}, "google translate": {"aliases": ["google translate", "translate"], "e": "🌐 **Google Translate:**\n\n🔹 **What it is:** Google's neural machine translation service capable of translating text, spoken voice, handwriting, and live camera images across over 130 languages.", "h": "🌐 **Google Translate:**\n\n🔹 **Kya hai:** Kisi bhi bhasha ko doosri bhasha mein translate karne ka app — text, voice aur camera photo sab translate karta hai!"}, "signal": {"aliases": ["signal", "signal app"], "e": "🔒 **Signal:**\n\n🔹 **What it is:** A non-profit, open-source encrypted communication app heralded as the gold standard in privacy, employing zero metadata tracking and the Signal Protocol.", "h": "🔒 **Signal:**\n\n🔹 **Kya hai:** Duniya ka sabse secure aur private messaging app jahan zero user tracking aur top-tier encryption hoti hai."}, "viber": {"aliases": ["viber"], "e": "📞 **Viber:**\n\n🔹 **What it is:** A cross-platform VoIP and instant messaging app owned by Rakuten, enabling free audio/video calling, group chats, and Viber Out international calls.", "h": "📞 **Viber:**\n\n🔹 **Kya hai:** Free internet voice aur video calls karne ka popular messaging app jo Rakuten company ka hai."}, "line": {"aliases": ["line app", "line messenger"], "e": "🐻 **Line:**\n\n🔹 **What it is:** Japan's dominant messaging super-app featuring instant messaging, voice/video calls, LINE Pay, gaming, and iconic sticker characters (LINE Friends).", "h": "🐻 **Line:**\n\n🔹 **Kya hai:** Japan aur Taiwan ka sabse bada messaging app jo cute stickers aur mobile payments ke liye jaana jaata hai."}, "wechat": {"aliases": ["wechat", "we chat"], "e": "🇨🇳 **WeChat (Weixin):**\n\n🔹 **What it is:** Tencent's ubiquitous Chinese 'app for everything', integrating messaging, social feeds (Moments), digital payments (WeChat Pay), ride-hailing, and mini-programs for over 1.3 Billion users.", "h": "🇨🇳 **WeChat:**\n\n🔹 **Kya hai:** China ka 'Super App' jisme chat, payments, shopping, tickets aur government services sab ek hi app mein hoti hain!"}, "goodreads": {"aliases": ["goodreads"], "e": "📚 **Goodreads:**\n\n🔹 **What it is:** An Amazon-owned social cataloging platform for book lovers to track reading goals, write reviews, explore user ratings, and get personalized book recommendations.", "h": "📚 **Goodreads:**\n\n🔹 **Kya hai:** Kitabein padhne walon ka social network jahan book reviews, ratings aur reading challenges track hote hain."}, "audible": {"aliases": ["audible"], "e": "🎧 **Audible:**\n\n🔹 **What it is:** Amazon's world-leading audiobook and spoken-word entertainment service offering hundreds of thousands of professionally narrated books and exclusive podcasts.", "h": "🎧 **Audible:**\n\n🔹 **Kya hai:** Amazon ka audiobook app jahan kitabein padhne ke bajaye suni jaati hain!"}, "myfitnesspal": {"aliases": ["myfitnesspal", "my fitness pal"], "e": "🥗 **MyFitnessPal:**\n\n🔹 **What it is:** A premier health and wellness app featuring an extensive food nutrition database to log daily meals, track macronutrients, monitor calories, and achieve weight goals.", "h": "🥗 **MyFitnessPal:**\n\n🔹 **Kya hai:** Diet aur calorie tracking app jo batata hai ki aapne din bhar mein kitna protein, carbs aur calories khayi hain."}, "strava": {"aliases": ["strava"], "e": "🏃‍♂️ **Strava:**\n\n🔹 **What it is:** A fitness tracking app and social network for runners, cyclists, and athletes that records GPS route maps, elevation gain, heart rate metrics, and competitive segment leaderboards.", "h": "🏃‍♂️ **Strava:**\n\n🔹 **Kya hai:** Runners aur cyclists ka GPS fitness tracking app jo distance, speed aur route maps track karta hai."}, "flo": {"aliases": ["flo", "flo app"], "e": "🌸 **Flo:**\n\n🔹 **What it is:** An AI-powered women's health and wellbeing app used by over 300 Million women to track menstrual cycles, ovulation windows, pregnancy development, and symptoms.", "h": "🌸 **Flo:**\n\n🔹 **Kya hai:** Women's health app jo menstrual cycle, ovulation aur pregnancy tracking mein madad karta hai."}, "calm": {"aliases": ["calm", "calm app"], "e": "🧘 **Calm:**\n\n🔹 **What it is:** A leading mental wellness software application designed to reduce anxiety, enhance sleep quality, and foster mindfulness through guided meditations, breathing exercises, and Sleep Stories.", "h": "🧘 **Calm:**\n\n🔹 **Kya hai:** Stress relief, dhyan (meditation) aur achhi neend ke liye soothing sounds aur sleep stories sunane wala app."}, "headspace": {"aliases": ["headspace"], "e": "🧠 **Headspace:**\n\n🔹 **What it is:** A digital health platform providing scientifically backed mindfulness exercises, guided meditation courses, focus music, and sleep coaching to build lifelong healthy mental habits.", "h": "🧠 **Headspace:**\n\n🔹 **Kya hai:** Meditation aur mindfulness seekhne ka app jo dimaag ko shaant aur focused rakhne mein help karta hai."}, "trello": {"aliases": ["trello"], "e": "📋 **Trello:**\n\n🔹 **What it is:** A visual project management tool by Atlassian based on the Japanese Kanban methodology, organizing tasks into visual Boards, Lists, and Cards for intuitive workflow tracking.", "h": "📋 **Trello:**\n\n🔹 **Kya hai:** Kanban boards par tasks aur projects organize karne ka visual task management app hai."}, "asana": {"aliases": ["asana"], "e": "📊 **Asana:**\n\n🔹 **What it is:** An enterprise work management platform designed to help teams coordinate, track, and execute collaborative projects with Gantt timelines, task dependencies, and milestone goals.", "h": "📊 **Asana:**\n\n🔹 **Kya hai:** Teams aur companies ke project management, deadlines aur task tracking ka professional tool hai."}, "dropbox": {"aliases": ["dropbox"], "e": "📁 **Dropbox:**\n\n🔹 **What it is:** A cloud storage and file synchronization service that keeps files seamlessly updated across desktop and mobile devices with smart sharing links and document backup.", "h": "📁 **Dropbox:**\n\n🔹 **Kya hai:** Files, documents aur photos ko cloud par sync aur share karne ka pioneer cloud storage app."}, "evernote": {"aliases": ["evernote"], "e": "🐘 **Evernote:**\n\n🔹 **What it is:** A comprehensive note-taking and archiving app that allows users to capture formatted notes, audio clips, web page clippings, and digitized handwritten documents.", "h": "🐘 **Evernote:**\n\n🔹 **Kya hai:** Digital notes lene, web articles clip karne aur documents organize karne ka classic note app."}, "adobe lightroom": {"aliases": ["lightroom", "adobe lightroom"], "e": "📸 **Adobe Lightroom:**\n\n🔹 **What it is:** A cloud-based photo editing and color grading powerhouse from Adobe, offering RAW image processing, color curves, selective adjustments, and professional photography presets.", "h": "📸 **Adobe Lightroom:**\n\n🔹 **Kya hai:** Adobe ka professional photo editor jo color grading, lighting adjustment aur presets ke liye best hai."}, "vsco": {"aliases": ["vsco"], "e": "🎞️ **VSCO:**\n\n🔹 **What it is:** A creative photo and video editing platform acclaimed for its authentic film-emulation filters, grain textures, and distraction-free creator community without public likes or comments.", "h": "🎞️ **VSCO:**\n\n🔹 **Kya hai:** Aesthetic photography app jo vintage film filters aur clean editing tools provide karta hai."}, "brave browser": {"aliases": ["brave", "brave browser"], "e": "🦁 **Brave Browser:**\n\n🔹 **What it is:** A privacy-focused open-source web browser that automatically blocks online intrusive advertisements, cross-site trackers, and fingerprinting by default for 3x faster browsing.", "h": "🦁 **Brave Browser:**\n\n🔹 **Kya hai:** Fast web browser jo bina kisi extension ke sabhi ads aur tracking cookies ko automatically block kar deta hai!"}, "duckduckgo": {"aliases": ["duckduckgo", "ddg"], "e": "🦆 **DuckDuckGo:**\n\n🔹 **What it is:** An internet privacy company providing a secure search engine and web browser that does not profile users, track IP addresses, or store search histories.", "h": "🦆 **DuckDuckGo:**\n\n🔹 **Kya hai:** Privacy-first search engine jo aapki search history aur IP address ko bilkul track ya save nahi karta!"}, "nordvpn": {"aliases": ["nordvpn", "nord vpn"], "e": "🛡️ **NordVPN:**\n\n🔹 **What it is:** A top-tier Virtual Private Network (VPN) security service that encrypts online traffic with AES-256 encryption, hides real IP addresses, and bypasses regional content geo-blocks.", "h": "🛡️ **NordVPN:**\n\n🔹 **Kya hai:** Internet privacy aur security app jo aapke internet traffic ko encrypt karke IP address hide karta hai."}, "ring": {"aliases": ["ring app", "ring doorbell"], "e": "🔔 **Ring:**\n\n🔹 **What it is:** An Amazon-owned smart home security ecosystem offering video doorbells and surveillance cameras with live HD streaming, two-way talk audio, and motion detection alerts.", "h": "🔔 **Ring:**\n\n🔹 **Kya hai:** Smart video doorbell aur home security app jisse aap phone par dekh sakte hain ki darwaze par kaun aaya hai."}, "yelp": {"aliases": ["yelp"], "e": "⭐ **Yelp:**\n\n🔹 **What it is:** A crowd-sourced local business review and discovery platform where consumers share reviews, star ratings, photos, and tips on restaurants, bars, and home services.", "h": "⭐ **Yelp:**\n\n🔹 **Kya hai:** Local restaurants, cafes aur services ke customer reviews aur star ratings padhne ka popular app hai."}};
+Object.assign(KB, APPS_KB);
+
+function searchKB(text) {
+  text = text.toLowerCase().trim();
+  for (const [key, val] of Object.entries(KB)) {
+    const aliases = val.aliases || [key];
+    for (const alias of aliases) {
+      const reg = new RegExp('(\\b|^)' + alias.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&') + '(\\b|$)');
+      if (reg.test(text)) return val;
+    }
+  }
+  for (const [key, val] of Object.entries(KB)) {
+    if (key.split(' ').every(k => text.includes(k))) return val;
+  }
+  return null;
+}
+
+function gen(t, l) {
+  const lo = t.toLowerCase().trim(), h = l === 'hinglish';
+
+  // 1. Creator
+  if (/(who (created|made|built|coded|developed) (you|housie)|who is your (creator|maker|developer|author)|tumhe kisne (banaya|code kiya|design kiya)|aapko kisne banaya|kisne banaya)/i.test(lo)) {
+    return h ? CREATOR_COOL_HI : CREATOR_COOL_EN;
+  }
+
+  // 2. Greetings & Basic
+  if (/^(hi+|hello+|hey+|yo|sup|hola)\b/.test(lo)) return h ? "Hey yaar! Housie hoon 😄 Math, Science, Coding — kuch bhi pucho!" : "Hello! I'm Housie 😊 Ask me anything — math, science, trigonometry, coding and more!";
+  if (/namaste|namaskar/.test(lo)) return h ? "Namaste! 🙏 Housie ready hai!" : "Namaste! 🙏 How can I help you today?";
+  if (/how are you|kaise ho|kaisa hai|kya haal/.test(lo)) return h ? "Mast hoon yaar! 🤩 Tu bata kya solve karein?" : "Doing fantastic! ⚡ What shall we tackle today?";
+  if (/your name|tumhara naam|tera naam|who are you|kaun ho|what are you/.test(lo)) return h ? "Main Housie — tera AI dost! 🧠 Math, science, coding sab mujhse pucho!" : "I'm Housie — your AI companion! 🧠 Built to handle math, science, coding and more!";
+  if (/what time|kitna baj|time kya|abhi ka time|current time/.test(lo)) return `⏰ **${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}** (IST)`;
+  if (/what.?s today|today.?s date|aaj ki date|kon sa din|what date/.test(lo)) { const d = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); return `📅 **${d}**`; }
+  if (/joke|mazak|funny|hasao|haso|sunao|laugh/.test(lo)) return pick(h ? JK.h : JK.e);
+  if (/motiv|quote|inspire|hausla|himmat|encouragement/.test(lo)) return pick(h ? MO.h : MO.e);
+  if (/fun fact|did you know|rochak|amazing fact/.test(lo)) return pick(h ? FA.h : FA.e);
+  if (/weather|mausam|barish|garmi/.test(lo)) return h ? "Weather data mere paas nahi hai 😅 Google Weather try karo!" : "No live weather data! 🌤️ Try Google Weather or a weather app.";
+  if (/what can you do|kya kar sakte|features|help me|capabilities/.test(lo)) return h
+    ? "🚀 Main kar sakta hoon:\n📐 Trigonometry — sin(30°), cos(60°), tan(45°)\n√ Roots & Logs — √144, log(100), ln(e)\n🔢 Quadratics — x²-5x+6=0\n📊 LCM, GCD, nCr, nPr, Fibonacci\n💰 Compound & Simple Interest\n📏 Area, Volume (circle, sphere, rectangle)\n🎯 Prime check, Mean, Percentage\n🔬 Science Q&A — Physics, CS, Biology\n😂 Jokes & Motivation\n\nBas pucho yaar!"
+    : "🚀 I can help with:\n📐 Trigonometry — sin(30°), cos(60°)\n√ Roots & Logs — √144, log(100)\n🔢 Quadratic equations — x²-5x+6=0\n📊 LCM, GCD, nCr, nPr, Fibonacci\n💰 Compound & Simple Interest\n📏 Area & Volume formulas\n🎯 Prime check, Mean, Percentage\n🔬 Science — Physics, CS, Biology\n😂 Jokes & Motivation!\n\nJust ask!";
+
+  // 3. Knowledge Base (Science / CS / Math concepts)
+  const kb = searchKB(lo);
+  if (kb) return h ? kb.h : kb.e;
+
+  // 4. Math Solver (covers arithmetic, trig, roots, quadratics, LCM, nCr, CI, area, etc.)
+  const parsed = parseMath(t);
+  if (parsed) {
+    if (parsed.type === 'quad' || parsed.type === 'special') return parsed.result;
+    if (parsed.type === 'expr') {
+      const cleanInput = t.replace(/bhai|yaar|kya hai|kitna hoga|batao|calculate|solve|please|plz|value of/gi, '').trim();
+      return h
+        ? `✅ **Calculation Solution**\n\nQuery: **${cleanInput}**\n\n<span class="math-result">= ${parsed.result}</span>\n\nAur kuch calculate karoon? 😊`
+        : `✅ **Mathematical Solution**\n\nQuery: **${cleanInput}**\n\n<span class="math-result">= ${parsed.result}</span>\n\nNeed anything else calculated? 😊`;
+    }
+  }
+
+  // 5. Smart Fallback
+  return pick(h ? [
+    "Hmm, yeh topic abhi mere knowledge mein nahi hai! 🤔 Kuch try karo:\n• sin(45) ya cos(60)\n• LCM of 12 and 18\n• x^2 - 5x + 6 = 0\n• Black hole explain karo\n• Fibonacci 10",
+    "Bhai, yeh thoda zyada mushkil hai! 😅 Physics, CS, ya Math pe try karo — main turant jawab dunga!",
+    "Interesting sawal! 🧠 Lekin abhi mujhe is topic ki training nahi mili. Trigonometry, statistics, ya science try karo!"
+  ] : [
+    "That's a tough one! 🤔 Try me with:\n• sin(45°) or tan(60°)\n• LCM of 24 and 36\n• Solve x² - 5x + 6 = 0\n• Explain black holes\n• 15% of 350",
+    "Beyond my knowledge base! 😅 But I excel at math, physics, algorithms, and CS. Try those areas!",
+    "Interesting question! 🧠 I'm growing daily. Meanwhile, test me with complex math, trig, or science concepts!"
+  ]);
+}
+
+
+
+// ═══════════════════════════════════════════
+//   CHAT UI
+// ═══════════════════════════════════════════
+const msgEl = document.getElementById('messages'), inp = document.getElementById('user-input'), langEl = document.getElementById('lang-mode');
+let first = true;
+function ts() { return new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }); }
+
+function addMsg(t, role) {
+  if (first && role === 'user') { const w = document.getElementById('welcome-screen'); if (w) w.remove(); first = false; }
+  const row = document.createElement('div'); row.className = 'msg-row ' + role;
+  const av = document.createElement('div'); av.className = 'avatar ' + role; av.textContent = role === 'ai' ? '🧠' : '👤';
+  const ct = document.createElement('div'); ct.className = 'msg-content';
+  const b = document.createElement('div'); b.className = 'bubble ' + role;
+  b.innerHTML = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  const tm = document.createElement('div'); tm.className = 'timestamp'; tm.textContent = ts();
+  ct.appendChild(b); ct.appendChild(tm); row.appendChild(av); row.appendChild(ct);
+  msgEl.appendChild(row); msgEl.scrollTop = msgEl.scrollHeight;
+}
+
+function showTyp() {
+  const row = document.createElement('div'); row.className = 'msg-row ai'; row.id = 'typing-row';
+  const av = document.createElement('div'); av.className = 'avatar ai'; av.textContent = '🧠';
+  const ct = document.createElement('div'); ct.className = 'msg-content';
+  const b = document.createElement('div'); b.className = 'bubble ai';
+  b.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+  ct.appendChild(b); row.appendChild(av); row.appendChild(ct); msgEl.appendChild(row); msgEl.scrollTop = msgEl.scrollHeight; return row;
+}
+
+async function sendMessage() {
+  const t = inp.value.trim(); if (!t) return; inp.value = ''; inp.style.height = 'auto';
+  const l = detectLang(t); langEl.textContent = l === 'hinglish' ? '🇮🇳 Hinglish' : '🌐 English';
+  addMsg(t, 'user'); animateThink(); const typ = showTyp();
+  await new Promise(r => setTimeout(r, 500 + Math.random() * 700));
+  typ.remove(); addMsg(gen(t, l), 'ai'); animateReply();
+}
+
+function sendChip(t) { inp.value = t; sendMessage(); }
+inp.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 100) + 'px'; });
+inp.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+</script>
+</body>
+</html>
