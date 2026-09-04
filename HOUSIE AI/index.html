@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Housie AI — Full-Stack Math &amp; Aesthetic Assistant</title>
+  <meta name="description" content="Housie AI — Full-Stack AI assistant powered by Node.js, Express, Advanced Math Engine, and Liquid Glass UI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══ MINECRAFT MOVIE HD LANDSCAPE & DRIFTING CLOUDS ═══ -->
+<div class="bg-viewport">
+  <img class="mc-bg-wallpaper" src="assets/minecraft_bg.png" alt="Minecraft Movie HD Landscape" />
+
+  <div class="clouds-viewport">
+    <div class="floating-cloud-img" style="top: 6%; width: 320px; height: 180px; background-image: url('assets/cloud.png'); animation: driftCloud 45s linear infinite; animation-delay: -10s;"></div>
+    <div class="floating-cloud-img" style="top: 14%; width: 240px; height: 140px; background-image: url('assets/cloud.png'); animation: driftCloud 65s linear infinite; animation-delay: -35s; opacity: 0.75;"></div>
+    <div class="floating-cloud-img" style="top: 3%; width: 380px; height: 210px; background-image: url('assets/cloud.png'); animation: driftCloud 55s linear infinite; animation-delay: -20s; opacity: 0.9;"></div>
+    <div class="floating-cloud-img" style="top: 20%; width: 200px; height: 120px; background-image: url('assets/cloud.png'); animation: driftCloud 75s linear infinite; animation-delay: -50s; opacity: 0.65;"></div>
+  </div>
+</div>
+
+<!-- ═══ 3D BRAIN OVERLAY ═══ -->
+<canvas id="brain-canvas"></canvas>
+
+<div id="app">
+  <!-- ═══ LEFT PANEL: SVG ROBOT MASCOT ═══ -->
+  <div class="robot-panel">
+    <div class="robot-glass">
+      <div class="robot-speech" id="robot-speech">Soch raha hoon... 🤔</div>
+
+      <div class="robot-body" id="robot-body">
+        <svg class="robot-svg" viewBox="0 0 160 200" fill="none">
+          <ellipse cx="80" cy="192" rx="40" ry="7" fill="rgba(0,0,0,0.25)" />
+          <ellipse cx="80" cy="140" rx="40" ry="48" fill="rgba(255,255,255,0.96)" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/>
+          <ellipse cx="68" cy="126" rx="16" ry="26" fill="rgba(255,255,255,0.4)" />
+          <g><path d="M38 126 C25 121 18 130 22 140 C24 145 30 147 36 143" stroke="#a78bfa" stroke-width="9" stroke-linecap="round" fill="none"/><circle cx="22" cy="140" r="6" fill="#a78bfa"/></g>
+          <g class="robot-arm-right"><path d="M122 126 C135 121 142 130 138 140 C136 145 130 147 124 143" stroke="#a78bfa" stroke-width="9" stroke-linecap="round" fill="none"/><circle cx="138" cy="140" r="6" fill="#a78bfa"/></g>
+          <rect x="73" y="87" width="14" height="10" rx="3" fill="rgba(226,232,240,0.9)"/>
+          <ellipse cx="80" cy="58" rx="38" ry="36" fill="rgba(255,255,255,0.96)" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/>
+          <ellipse cx="80" cy="30" rx="18" ry="9" fill="#a78bfa" opacity="0.9"/>
+          <path d="M56 33 Q80 18 104 33" fill="#6366f1" opacity="0.85"/>
+          <rect x="52" y="43" width="56" height="28" rx="14" fill="#1e293b"/>
+          <ellipse class="robot-eye" cx="67" cy="56" rx="8" ry="9" fill="#2dd4bf" style="transition: filter 0.3s, fill 0.3s"><animate attributeName="ry" values="9;9;1;9;9" dur="4s" repeatCount="indefinite" keyTimes="0;0.45;0.5;0.55;1"/></ellipse>
+          <ellipse class="robot-eye" cx="93" cy="56" rx="8" ry="9" fill="#2dd4bf" style="transition: filter 0.3s, fill 0.3s"><animate attributeName="ry" values="9;9;1;9;9" dur="4s" repeatCount="indefinite" keyTimes="0;0.45;0.5;0.55;1"/></ellipse>
+          <line x1="80" y1="22" x2="80" y2="8" stroke="rgba(148,163,184,0.7)" stroke-width="2"/>
+          <circle cx="80" cy="6" r="4" fill="#a78bfa"><animate attributeName="r" values="3;5;3" dur="1.5s" repeatCount="indefinite"/></circle>
+          <circle cx="80" cy="148" r="3.5" fill="#a78bfa" opacity="0.7"/>
+          <ellipse cx="66" cy="187" rx="13" ry="5" fill="rgba(226,232,240,0.8)"/>
+          <ellipse cx="94" cy="187" rx="13" ry="5" fill="rgba(226,232,240,0.8)"/>
+        </svg>
+      </div>
+
+      <div>
+        <div class="robot-name">HOUSIE</div>
+        <div class="robot-status"><span class="dot"></span> Online &amp; Ready</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT PANEL: CHAT INTERFACE ═══ -->
+  <div class="right-panel">
+    <div class="header">
+      <div class="logo-ring"><span class="logo-icon">🧠</span></div>
+      <div class="header-text">
+        <h1>HOUSIE AI</h1>
+        <p>Full-Stack Node.js &middot; English &amp; Hinglish</p>
+      </div>
+    </div>
+
+    <div class="chat-container">
+      <div class="mode-badge">Lang: <span id="lang-mode">Auto</span></div>
+      <div class="messages" id="messages">
+        <div class="welcome" id="welcome-screen">
+          <div class="welcome-emoji">👋</div>
+          <h2>Namaste! Hello!</h2>
+          <p>Main <strong>Housie AI</strong> hoon — tumhara smart full-stack assistant. Ask any mathematics question, algebra, trigonometry, or square roots!</p>
+          <div class="suggestion-chips">
+            <div class="chip" onclick="sendChip('Under root 144 plus sin(30)')">📐 √144 + sin(30°)</div>
+            <div class="chip" onclick="sendChip('Who created you?')">⚡ Who created you?</div>
+            <div class="chip" onclick="sendChip('cos(60) * tan(45)')">📐 cos(60°) × tan(45°)</div>
+            <div class="chip" onclick="sendChip('Solve x^2 - 5x + 6 = 0')">🔢 Solve x² - 5x + 6 = 0</div>
+            <div class="chip" onclick="sendChip('Tell me a joke')">😂 Joke</div>
+            <div class="chip" onclick="sendChip('What can you do?')">🚀 Features</div>
+          </div>
+        </div>
+      </div>
+      <div class="input-area">
+        <div class="input-wrapper">
+          <textarea id="user-input" placeholder="Type any math question or prompt in English ya Hinglish..." rows="1"></textarea>
+        </div>
+        <button id="send-btn" onclick="sendMessage()" aria-label="Send">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
