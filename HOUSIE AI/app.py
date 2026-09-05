@@ -33,7 +33,7 @@ try:
 except ImportError:
     SYMPY_AVAILABLE = False
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__, static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'))
 CORS(app)
 
 # ═══════════════════════════════════════════
@@ -409,6 +409,8 @@ KNOWLEDGE = {
 
 # Merge all 100 top apps into knowledge base
 try:
+    import sys as _sys
+    _sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from app_knowledge import APPS_KNOWLEDGE
     KNOWLEDGE.update(APPS_KNOWLEDGE)
 except ImportError:
