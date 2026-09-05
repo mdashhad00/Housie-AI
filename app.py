@@ -428,6 +428,9 @@ def search_knowledge(text):
     alias_pairs.sort(key=lambda x: len(x[0]), reverse=True)
 
     for alias, item in alias_pairs:
+        # Prevent 1-letter aliases (like 'x' for Twitter) from matching math expressions
+        if len(alias) <= 1 and text != alias and not re.search(r'\b(?:app|twitter|platform|social)\b', text):
+            continue
         pattern = r'(?:\b|^)' + re.escape(alias) + r'(?:\b|$)'
         if re.search(pattern, text):
             return item
