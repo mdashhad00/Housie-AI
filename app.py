@@ -717,9 +717,12 @@ def basic_math(query):
 # ═══════════════════════════════════════════
 #   MAIN CHAT API ENDPOINT
 # ═══════════════════════════════════════════
-@app.route('/api/chat', methods=['POST'])
+@app.route('/api/chat', methods=['GET', 'POST'])
+@app.route('/chat', methods=['GET', 'POST'])
 def chat():
-    data = request.json
+    if request.method == 'GET':
+        return jsonify({'status': 'online', 'name': 'Housie AI Backend', 'version': '4.0'})
+    data = request.json or {}
     message = data.get('message', '').strip()
     if not message:
         return jsonify({'error': 'Message is required'}), 400

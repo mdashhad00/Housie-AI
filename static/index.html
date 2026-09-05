@@ -362,6 +362,81 @@ const CHIPS = [
   "tell me a joke 😂",
 ];
 
+// ─── Client Fallback Engine (Zero Downtime) ───
+function getFallbackResponse(query) {
+  const text = (query || '').toLowerCase().trim();
+  const isHinglish = /kya|hai|bhai|yaar|kaise|kaisa|kuch|nahi|haan|kaun|kisne|banaya|sunao|bol/.test(text);
+
+  // 1. Creator
+  if (/who (created|made|built|coded|developed) (you|housie)|who is your (creator|maker|developer)|kisne banaya|tumhe kisne|aapko kisne/.test(text)) {
+    return {
+      response: isHinglish
+        ? "😤 Bhai, ek 16-saal ka coding prodigy ne mujhe banaya hai! Woh ek aisa genius hai jo apne **nange haathon se** continuously raw algorithms likhta hai — bina soye, bina grass touch kiye, bina break liye! Woh basically ek insaan ke roop mein ek supercomputer hai. Usse salaam karo bhai! ⚡💻🔥"
+        : "🔥 Oof, bold question! I was forged from raw code by a **16-year-old absolute genius** — a coding prodigy who writes blazing algorithms with his bare naked hands, continuously, without stopping, without touching grass, without sleeping. He is basically a human supercomputer who decided to build me instead of doing anything normal. Respect the legend. ⚡💻🚀",
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // 2. Greetings
+  if (/^(hi+|hello+|hey+|yo|sup|hola)\b/.test(text)) {
+    return {
+      response: isHinglish
+        ? "Hey yaar! Housie hoon 😄 Math, Science, Coding — kuch bhi pucho! Main ready hoon!"
+        : "Hello! I'm Housie 😊 Your AI companion. Ask me math, science, coding questions, jokes, and more!",
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // 3. Name / Identity
+  if (/your name|tumhara naam|who are you|kaun ho|what are you/.test(text)) {
+    return {
+      response: isHinglish
+        ? "Main Housie — tera AI dost! 🧠 Smart math solver aur encyclopedia!"
+        : "I'm Housie — your AI companion! 🧠 Powered with advanced math solving and knowledge!",
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // 4. Jokes
+  if (/joke|mazak|funny|hasao|laugh/.test(text)) {
+    const jokes = [
+      "Why don't scientists trust atoms? Because they make up everything! ⚛️😂",
+      "What do you call a fake noodle? An impasta! 🍝😂",
+      "Why did the scarecrow win an award? Because he was outstanding in his field! 🌾😂",
+      "Why don't skeletons fight each other? They don't have the guts! 💀😂",
+      "What do you call cheese that isn't yours? Nacho cheese! 🧀😂",
+      "Why did the bicycle fall over? Because it was two tired! 🚲😂"
+    ];
+    return {
+      response: jokes[Math.floor(Math.random() * jokes.length)],
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // 5. Math evaluation
+  try {
+    const cleanMath = text.replace(/what is|calculate|solve|=|\?/g, '').trim();
+    if (/^[0-9+\-*/^().\s%]+$/.test(cleanMath)) {
+      const expr = cleanMath.replace(/\^/g, '**');
+      const val = Function('"use strict";return (' + expr + ')')();
+      if (typeof val === 'number' && !isNaN(val)) {
+        return {
+          response: `✅ **Result = ${Number.isInteger(val) ? val.toLocaleString() : val.toPrecision(8)}**\n\nNeed anything else solved? 😊`,
+          language: isHinglish ? 'hinglish' : 'english'
+        };
+      }
+    }
+  } catch (e) {}
+
+  // 6. Default Fallback
+  return {
+    response: isHinglish
+      ? "Interesting sawal! 🧠 Math questions try karo jaise:\n• 15 * 45 + 120\n• who created you\n• tell me a joke 😂"
+      : "Great question! 💡 Try asking me:\n• Math problems (e.g. 25 * 40 - 100)\n• Who created you?\n• Tell me a joke 😂",
+    language: isHinglish ? 'hinglish' : 'english'
+  };
+}
+
 // ─── Main App Component ───
 function HousieApp() {
   const [messages, setMessages] = useState([]);
@@ -414,9 +489,15 @@ function HousieApp() {
       setTalking(true);
       setTimeout(() => { setTalking(false); setShowSpeech(false); }, 2200);
     } catch (err) {
+      // Graceful client-side fallback engine
+      const clientRes = getFallbackResponse(msg);
+      await new Promise(r => setTimeout(r, 400));
       setIsTyping(false);
-      setShowSpeech(false);
-      setMessages(prev => [...prev, { role: 'ai', text: '❌ Server se connect nahi ho paya! Python server chal raha hai? `python app.py` run karo.', time: timeNow() }]);
+      setMessages(prev => [...prev, { role: 'ai', text: clientRes.response, time: timeNow() }]);
+      setLangMode(clientRes.language === 'hinglish' ? '🇮🇳 Hinglish' : '🌐 English');
+      setSpeech('Yeh lo! ✅');
+      setTalking(true);
+      setTimeout(() => { setTalking(false); setShowSpeech(false); }, 2200);
     }
   };
 
