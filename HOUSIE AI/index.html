@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Housie AI — Your Smart AI Companion</title>
   <meta name="description" content="Housie AI: SymPy-powered math solver with 30+ science topics, bilingual English/Hinglish support. Now with Whisper.cpp voice input & TTS." />
-  <!-- SharedArrayBuffer required for Whisper WASM threads -->
-  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
-  <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
 
   <!-- React + Babel CDN for React without Node.js -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -917,17 +914,13 @@ function HousieApp() {
   // ── Voice Recording & STT ──
   const startRecording = React.useCallback(async () => {
     if (isRecording || isTyping) return;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      audioChunksRef.current = [];
-      setIsRecording(true);
-      setVoiceState('recording');
+    setIsRecording(true);
+    setVoiceState('recording');
 
-      // --- Path A: Web Speech API (instant fallback while WASM loads) ---
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const useWebSpeech = !!(SpeechRec && (whisperStatus !== 'ready'));
-
-      if (useWebSpeech) {
+    // --- Path A: Web Speech API (Chrome/Edge/Safari — no download, instant) ---
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRec) {
+      try {
         const rec = new SpeechRec();
         recognitionRef.current = rec;
         rec.continuous = false;
@@ -935,42 +928,57 @@ function HousieApp() {
         rec.lang = 'en-US';
         rec.onresult = (evt) => {
           const transcript = evt.results[0][0].transcript.trim();
-          if (transcript) { setInput(''); sendMessage(transcript); }
-          stream.getTracks().forEach(t => t.stop());
-          setIsRecording(false); setVoiceState('idle');
+          if (transcript) sendMessage(transcript);
+          setIsRecording(false);
+          setVoiceState('idle');
+          recognitionRef.current = null;
         };
-        rec.onerror = () => { stream.getTracks().forEach(t => t.stop()); setIsRecording(false); setVoiceState('idle'); };
-        rec.onend = () => { stream.getTracks().forEach(t => t.stop()); setIsRecording(false); setVoiceState('idle'); };
+        rec.onerror = (e) => {
+          console.warn('Web Speech error:', e.error);
+          setIsRecording(false);
+          setVoiceState('idle');
+          recognitionRef.current = null;
+        };
+        rec.onend = () => {
+          setIsRecording(false);
+          setVoiceState('idle');
+          recognitionRef.current = null;
+        };
         rec.start();
-        // Auto-stop after 30s
         setTimeout(() => { try { rec.stop(); } catch(e){} }, 30000);
         return;
+      } catch(e) {
+        console.warn('Web Speech failed, trying Whisper...', e);
       }
+    }
 
-      // --- Path B: Whisper WASM ---
-      const mr = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+    // --- Path B: Whisper WASM (Firefox or when Web Speech unavailable) ---
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      audioChunksRef.current = [];
+
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/webm';
+      if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = '';
+
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = mr;
       mr.ondataavailable = e => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
       mr.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         setVoiceState('transcribing');
         try {
-          const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
           const arrayBuf = await blob.arrayBuffer();
-          const audioCtx = new AudioContext({ sampleRate: 16000 });
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
           const decoded = await audioCtx.decodeAudioData(arrayBuf);
           const float32 = decoded.getChannelData(0);
           const transcript = await transcribeAudioBuffer(float32, whisperModel, progress => {
             if (progress.phase === 'downloading') setWhisperPct(progress.pct);
           });
-          if (transcript) {
-            setInput('');
-            sendMessage(transcript);
-          } else {
-            setVoiceState('idle');
-          }
+          if (transcript) sendMessage(transcript);
         } catch (err) {
-          setVoiceState('idle');
+          console.error('Whisper transcription error:', err);
         } finally {
           setIsRecording(false);
           setVoiceState('idle');
@@ -979,10 +987,11 @@ function HousieApp() {
       mr.start();
       setTimeout(() => { if (mr.state === 'recording') mr.stop(); }, 30000);
     } catch (err) {
-      setIsRecording(false); setVoiceState('idle');
+      setIsRecording(false);
+      setVoiceState('idle');
       alert('Microphone permission denied. Please allow microphone access and try again.');
     }
-  }, [isRecording, isTyping, whisperModel, whisperStatus]);
+  }, [isRecording, isTyping, whisperModel]);
 
   const stopRecording = React.useCallback(() => {
     if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch(e){} }
