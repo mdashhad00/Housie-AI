@@ -423,6 +423,33 @@
     }
     .model-select:focus { border-color: rgba(99,102,241,0.4); }
 
+    /* Device control result card */
+    .device-card {
+      margin-top: 10px; padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(15,23,42,0.8), rgba(30,41,59,0.7));
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 14px; display: flex; flex-direction: column; gap: 8px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.2);
+    }
+    .device-card-row { display: flex; align-items: center; gap: 10px; }
+    .device-card-icon {
+      font-size: 22px; width: 40px; height: 40px; border-radius: 12px;
+      background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.25);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .device-card-label { font-size: 13px; font-weight: 700; color: #f1f5f9; }
+    .device-card-value { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+    .device-card-btn {
+      padding: 8px 16px; border: none; border-radius: 10px; cursor: pointer;
+      font-size: 12px; font-weight: 600; color: #fff;
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
+      transition: all 0.2s; box-shadow: 0 3px 10px rgba(99,102,241,0.3);
+    }
+    .device-card-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 16px rgba(99,102,241,0.5); }
+    .device-card-btn.green { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 3px 10px rgba(34,197,94,0.3); }
+    .device-card-btn.red { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 3px 10px rgba(239,68,68,0.3); }
+    .device-card-btn.teal { background: linear-gradient(135deg, #2dd4bf, #0d9488); box-shadow: 0 3px 10px rgba(45,212,191,0.3); }
+
     /* Mobile */
     @media (max-width: 768px) {
       #root { flex-direction: column; gap: 10px; padding: 10px; }
@@ -526,16 +553,159 @@ function timeNow() {
   return new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 }
 
+// ─── Device Command Executor ───
+async function executeDeviceCmd(action, setMessages) {
+  const { deviceCmd, copyText, notifyMsg, shareText, url } = action;
+  const t = timeNow();
+
+  if (deviceCmd === 'copy') {
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setMessages(p => [...p, { role:'ai', text:`✅ **Copied!** "${copyText}" is now in your clipboard. Press **Ctrl+V** to paste anywhere!`, time: t }]);
+    } catch { setMessages(p => [...p, { role:'ai', text:`❌ Clipboard access denied. Please allow clipboard permission and try again.`, time: t }]); }
+  }
+
+  else if (deviceCmd === 'notify') {
+    if (!('Notification' in window)) {
+      setMessages(p => [...p, { role:'ai', text:`❌ This browser doesn't support notifications.`, time: t }]);
+    } else if (Notification.permission === 'granted') {
+      new Notification('Housie AI 🧠', { body: notifyMsg, icon: '/minecraft_bg.png' });
+      setMessages(p => [...p, { role:'ai', text:`✅ Notification sent: **"${notifyMsg}"**`, time: t }]);
+    } else {
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') {
+        new Notification('Housie AI 🧠', { body: notifyMsg, icon: '/minecraft_bg.png' });
+        setMessages(p => [...p, { role:'ai', text:`✅ Notification sent: **"${notifyMsg}"**`, time: t }]);
+      } else {
+        setMessages(p => [...p, { role:'ai', text:`❌ Notification permission denied. Please allow notifications in your browser settings.`, time: t }]);
+      }
+    }
+  }
+
+  else if (deviceCmd === 'vibrate') {
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200, 100, 400]);
+      setMessages(p => [...p, { role:'ai', text:`📳 Device vibrated! ✅ (pattern: 200ms-pause-200ms-pause-400ms)`, time: t }]);
+    } else {
+      setMessages(p => [...p, { role:'ai', text:`❌ Vibration not supported on this device/browser. Works on Android phones in Chrome!`, time: t }]);
+    }
+  }
+
+  else if (deviceCmd === 'battery') {
+    try {
+      const bat = await navigator.getBattery();
+      const pct = Math.round(bat.level * 100);
+      const charging = bat.charging ? '⚡ Charging' : '🔌 Not charging';
+      const eta = bat.charging && bat.chargingTime !== Infinity
+        ? ` • Full in ~${Math.round(bat.chargingTime/60)}min`
+        : (!bat.charging && bat.dischargingTime !== Infinity)
+        ? ` • ~${Math.round(bat.dischargingTime/60)}min left`
+        : '';
+      setMessages(p => [...p, { role:'ai', text:`🔋 **Battery: ${pct}%**\n${charging}${eta}\n\n${pct > 70 ? '✅ Battery is good!' : pct > 30 ? '⚠️ Battery getting low.' : '🛑 Plug in now!'}`, time: t }]);
+    } catch {
+      setMessages(p => [...p, { role:'ai', text:`❌ Battery API not available on this device/browser. Works on Android Chrome!`, time: t }]);
+    }
+  }
+
+  else if (deviceCmd === 'location') {
+    setMessages(p => [...p, { role:'ai', text:`📍 Getting your location... (please allow location permission)`, time: t }]);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude: lat, longitude: lng, accuracy: acc } = pos.coords;
+        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+        setMessages(p => [...p, {
+          role:'ai',
+          text: `📍 **Your Location:**\nLat: **${lat.toFixed(5)}** | Lng: **${lng.toFixed(5)}**\nAccuracy: ±${Math.round(acc)}m`,
+          action: { type:'open_app', app:'Google Maps', icon:'🗺️', url: mapsUrl, label:'🗺️ Open in Maps' },
+          time: t
+        }]);
+      },
+      err => setMessages(p => [...p, { role:'ai', text:`❌ Location denied or unavailable: ${err.message}`, time: t }]),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  else if (deviceCmd === 'wakelock') {
+    try {
+      if ('wakeLock' in navigator) {
+        await navigator.wakeLock.request('screen');
+        setMessages(p => [...p, { role:'ai', text:`💡 **Screen Wake Lock active!** Your screen won't sleep as long as this tab is open. ✅`, time: t }]);
+      } else {
+        setMessages(p => [...p, { role:'ai', text:`❌ Wake Lock API not supported on this browser. Try Chrome on Android/Desktop!`, time: t }]);
+      }
+    } catch(e) {
+      setMessages(p => [...p, { role:'ai', text:`❌ Wake Lock failed: ${e.message}`, time: t }]);
+    }
+  }
+
+  else if (deviceCmd === 'share') {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Housie AI', text: shareText, url: window.location.href });
+        setMessages(p => [...p, { role:'ai', text:`✅ Content shared successfully!`, time: t }]);
+      } catch(e) {
+        if (e.name !== 'AbortError') setMessages(p => [...p, { role:'ai', text:`❌ Share failed: ${e.message}`, time: t }]);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareText);
+        setMessages(p => [...p, { role:'ai', text:`📋 Web Share not available \u2014 copied to clipboard instead: **"${shareText}"**`, time: t }]);
+      } catch { setMessages(p => [...p, { role:'ai', text:`❌ Share not supported on this browser.`, time: t }]); }
+    }
+  }
+
+  else if (deviceCmd === 'call' && url) {
+    window.location.href = url;
+  }
+
+  else if (deviceCmd === 'email' && url) {
+    window.location.href = url;
+  }
+
+  else if (deviceCmd === 'camera' && url) {
+    window.open(url, '_blank');
+  }
+}
+
+// ─── Device Action Card Component ───
+function DeviceActionCard({ action, setMessages }) {
+  const [done, setDone] = useState(false);
+  const handleClick = async () => {
+    setDone(true);
+    await executeDeviceCmd(action, setMessages);
+  };
+  return (
+    <div className="device-card">
+      <div className="device-card-row">
+        <div className="device-card-icon">{action.icon}</div>
+        <div>
+          <div className="device-card-label">{action.app}</div>
+          <div className="device-card-value">{action.label}</div>
+        </div>
+      </div>
+      <button
+        className={`device-card-btn ${done ? 'teal' : ''}`}
+        onClick={handleClick}
+        disabled={done && !['location','battery','wakelock'].includes(action.deviceCmd)}
+      >
+        {done ? '✅ Done!' : action.label}
+      </button>
+    </div>
+  );
+}
+
 // ─── Suggested Chips ───
 const CHIPS = [
   "💬 text on whatsapp to 9876543210: hey bro",
   "▶️ open youtube and search lofi beats",
   "🎵 open spotify and play coldplay",
+  "📋 copy Hello World to clipboard",
+  "🔋 check my battery",
+  "📍 where am I",
+  "📞 call 9876543210",
+  "🔔 notify me: Time to study!",
   "derivative of x^3 + 2x",
-  "solve x^2 - 5x + 6 = 0",
   "🔢 open calculator",
-  "📸 open instagram",
-  "tell me a joke 😂",
 ];
 
 // ─── Client Fallback Engine (Zero Downtime) ───
@@ -570,8 +740,8 @@ function getFallbackResponse(query) {
       waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(msgContent)}`;
       preview = msgContent;
       resp = isHinglish
-        ? `💬 **+${phone}** ke liye WhatsApp text ready hai!\n\n**Message:** "${msgContent}"\n\nWhatsApp launch kar raha hoon... 🚀`
-        : `💬 Ready to text **+${phone}** on WhatsApp!\n\n**Message:** "${msgContent}"\n\nOpening WhatsApp now... 🚀`;
+        ? `💬 **+${phone}** ke liye message ready hai!\n\n**Message:** "${msgContent}"\n\n✅ Button dabao — WhatsApp mein message already filled hoga, bas **Send** press karo!`
+        : `💬 Message ready for **+${phone}**!\n\n**Message:** "${msgContent}"\n\n✅ Click the button — WhatsApp opens with message pre-filled, just press **Send**!`;
     } else if (phone && !msgContent) {
       waUrl = `https://wa.me/${phone}`;
       preview = `Chat with +${phone}`;
@@ -583,7 +753,7 @@ function getFallbackResponse(query) {
       preview = msgContent;
       resp = isHinglish
         ? `💬 WhatsApp message ready hai!\n\n**Message:** "${msgContent}"\n\nWhatsApp open ho raha hai, contact choose karo aur bhej do! 🚀`
-        : `💬 Prepared your WhatsApp message!\n\n**Message:** "${msgContent}"\n\nOpening WhatsApp so you can choose a recipient! 🚀`;
+        : `💬 Prepared your WhatsApp message!\n\n**Message:** "${msgContent}"\n\nOpening WhatsApp — choose a recipient and hit Send! 🚀`;
     }
 
     return {
@@ -595,7 +765,7 @@ function getFallbackResponse(query) {
         url: waUrl,
         phone: phone,
         previewText: preview,
-        label: '🚀 Open WhatsApp & Send'
+        label: phone && msgContent ? '💬 Open WhatsApp (message pre-filled)' : '🚀 Open WhatsApp'
       },
       language: isHinglish ? 'hinglish' : 'english'
     };
@@ -675,6 +845,167 @@ function getFallbackResponse(query) {
         query: appQuery,
         label: label
       },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // 1. Device Control Commands
+  // --- Phone Call ---
+  const callMatch = text.match(/(?:call|phone|dial|ring)\s+(?:on\s+)?(?:number\s+)?(\+?\d[\d\s\-]{6,})/i)
+    || query.match(/(?:call|phone|dial|ring)\s+(?:number\s+)?(\+?\d[\d\s\-]{6,})/i);
+  if (callMatch) {
+    const num = callMatch[1].replace(/\s/g,'');
+    return {
+      response: isHinglish ? `📞 **${num}** pe call kar raha hoon!` : `📞 Calling **${num}** now!`,
+      action: { type: 'device', deviceCmd: 'call', icon: '📞', app: 'Phone', label: `📞 Call ${num}`, url: `tel:${num}` },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Email / Mail ---
+  const emailMatch = text.match(/(?:email|mail|send mail)\s+(?:to\s+)?([\w.+]+@[\w.]+)(?:[:\s]+(.+))?/i)
+    || text.match(/(?:email|mail)\s+([\w.+]+@[\w.]+)/i);
+  if (emailMatch) {
+    const addr = emailMatch[1];
+    const subj = emailMatch[2] ? encodeURIComponent(emailMatch[2]) : '';
+    return {
+      response: isHinglish ? `✉️ **${addr}** ko email compose ho raha hai!` : `✉️ Composing email to **${addr}**!`,
+      action: { type: 'device', deviceCmd: 'email', icon: '✉️', app: 'Email', label: `✉️ Open Email`, url: `mailto:${addr}${subj ? '?subject='+subj : ''}` },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Clipboard copy ---
+  const copyMatch = text.match(/(?:copy|clipboard)\s+(?:karo\s+)?(.+?)(?:\s+(?:to clipboard|copy karo|clipboard pe))?$/i);
+  if (copyMatch && /\b(?:copy|clipboard)\b/i.test(text)) {
+    const copyText = copyMatch[1].trim();
+    return {
+      response: isHinglish ? `📋 "${copyText}" clipboard pe copy ho gaya! ✅` : `📋 Copied "${copyText}" to clipboard! ✅`,
+      action: { type: 'device', deviceCmd: 'copy', icon: '📋', app: 'Clipboard', label: '📋 Copy to Clipboard', copyText },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Browser Notification ---
+  const notifyMatch = text.match(/(?:notify|notification|alert|remind)\s+(?:me\s+)?(?:that\s+|with\s+)?[:"]?(.+)/i);
+  if (notifyMatch && /\b(?:notify|notification|alert|remind)\b/i.test(text)) {
+    const msg = notifyMatch[1].replace(/^[:\-"'\s]+|["'\s]+$/g,'').trim();
+    return {
+      response: isHinglish ? `🔔 Notification send kar raha hoon: "${msg}"` : `🔔 Sending notification: "${msg}"`,
+      action: { type: 'device', deviceCmd: 'notify', icon: '🔔', app: 'Notifications', label: '🔔 Send Notification', notifyMsg: msg },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Vibrate ---
+  if (/\b(?:vibrate|vibration|buzz)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `📳 Device vibrate kar raha hai! ✅` : `📳 Vibrating your device! ✅`,
+      action: { type: 'device', deviceCmd: 'vibrate', icon: '📳', app: 'Vibration', label: '📳 Vibrate Device' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Battery Status ---
+  if (/\b(?:battery|charge|charging)\b/i.test(text) && /\b(?:check|status|level|kitna|how much|dekho|batao)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `🔋 Battery check kar raha hoon...` : `🔋 Checking battery status...`,
+      action: { type: 'device', deviceCmd: 'battery', icon: '🔋', app: 'Battery', label: '🔋 Check Battery' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Location ---
+  if (/\b(?:location|where am i|my location|gps|kahan hoon|coordinates|latitude|longitude)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `📍 Aapka location dhundh raha hoon...` : `📍 Getting your location...`,
+      action: { type: 'device', deviceCmd: 'location', icon: '📍', app: 'Location', label: '📍 Get My Location' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Wake Lock / Screen On ---
+  if (/\b(?:keep screen on|screen on rakho|wake lock|dont sleep|don't sleep|screen off mat karo)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `💡 Screen on rakhega — sleep nahi karega! ✅` : `💡 Keeping screen awake — won't sleep! ✅`,
+      action: { type: 'device', deviceCmd: 'wakelock', icon: '💡', app: 'Screen', label: '💡 Keep Screen On' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Open Camera ---
+  if (/\b(?:open camera|camera open|take photo|take picture|selfie|camera chalao|photo lo)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `📷 Camera open kar raha hoon!` : `📷 Opening camera!`,
+      action: { type: 'device', deviceCmd: 'camera', icon: '📷', app: 'Camera', label: '📷 Open Camera', url: 'https://webcamtests.com' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Share ---
+  const shareMatch = text.match(/(?:share|forward)\s+(?:this\s+|karo\s+)?(.+)/i);
+  if (shareMatch && /\b(?:share|forward)\b/i.test(text)) {
+    const shareText = shareMatch[1].trim();
+    return {
+      response: isHinglish ? `🔗 "${shareText}" share kar raha hoon!` : `🔗 Sharing "${shareText}"!`,
+      action: { type: 'device', deviceCmd: 'share', icon: '🔗', app: 'Share', label: '🔗 Share Now', shareText },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Screenshot ---
+  if (/\b(?:screenshot|screen capture|screen shot|screencap)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `📸 Screenshot ke liye browser shortcut use karo:\n• **Windows:** Win + Shift + S\n• **Mac:** Cmd + Shift + 4\n• **Android:** Power + Volume Down\n• **iPhone:** Side + Volume Up` : `📸 To take a screenshot:\n• **Windows:** Win + Shift + S\n• **Mac:** Cmd + Shift + 4\n• **Android:** Power + Volume Down\n• **iPhone:** Side + Volume Up`,
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Volume (informational - browser cant control system volume) ---
+  if (/\b(?:volume|sound|audio)\s+(?:up|down|increase|decrease|loud|low|mute|unmute|badho|kam karo)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `🔊 Volume ke liye apne **keyboard ke volume keys** use karo (🔊/🔇 ya Fn+F11/F12).\n\nBrowser se system volume directly control nahi ho sakta!` : `🔊 Use your **keyboard volume keys** (🔊/🔇 or Fn+F11/F12) to adjust volume.\n\nBrowsers can't control system volume directly for security reasons!`,
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Network / WiFi Info ---
+  if (/\b(?:wifi|internet|network|connection|speed|bandwidth)\s+(?:check|status|info|speed|test|kitna)\b/i.test(text)) {
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const netInfo = conn ? `Type: ${conn.effectiveType || 'unknown'} | Downlink: ${conn.downlink || '?'}Mbps` : 'Network info not available';
+    return {
+      response: isHinglish ? `📶 **Network Info:**\n${netInfo}\n\nSpeed test ke liye fast.com open karo!` : `📶 **Network Info:**\n${netInfo}\n\nFor speed test, open fast.com!`,
+      action: { type: 'open_app', app: 'Fast.com Speed Test', icon: '📶', url: 'https://fast.com', label: '📶 Speed Test' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Alarm / Clock ---
+  if (/\b(?:alarm|set alarm|clock|timer|stopwatch)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `⏰ Clock/Alarm open kar raha hoon!` : `⏰ Opening Clock/Alarm!`,
+      action: { type: 'open_app', app: 'Google Clock', icon: '⏰', url: 'https://www.google.com/search?q=set+alarm', label: '⏰ Open Clock' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Weather ---
+  if (/\b(?:weather|temperature|aaj ka mausam|mausam|forecast|rain|sunny|hot|cold)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `🌤️ Weather dekh raha hoon!` : `🌤️ Checking weather for you!`,
+      action: { type: 'open_app', app: 'Weather', icon: '🌤️', url: 'https://www.google.com/search?q=weather+today', label: '🌤️ Check Weather' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Translate ---
+  const translateMatch = text.match(/(?:translate|translation)\s+(.+?)\s+(?:to|in|into)\s+(\w+)/i);
+  if (translateMatch) {
+    const phrase = encodeURIComponent(translateMatch[1]);
+    const lang = encodeURIComponent(translateMatch[2]);
+    return {
+      response: isHinglish ? `🌐 Translate kar raha hoon!` : `🌐 Translating for you!`,
+      action: { type: 'open_app', app: 'Google Translate', icon: '🌐', url: `https://translate.google.com/?text=${phrase}&tl=${lang}`, label: '🌐 Open Translator' },
       language: isHinglish ? 'hinglish' : 'english'
     };
   }
@@ -1205,7 +1536,9 @@ function HousieApp() {
                 <div className={`avatar ${msg.role}`}>{msg.role === 'ai' ? '🧠' : '👤'}</div>
                 <div className="msg-content">
                   <div className={`bubble ${msg.role}`} dangerouslySetInnerHTML={{ __html: formatText(msg.text) }} />
-                  {msg.action && (
+                  {msg.action && msg.action.type === 'device' ? (
+                    <DeviceActionCard action={msg.action} setMessages={setMessages} />
+                  ) : msg.action && (
                     <div className="action-card">
                       <div className="action-card-header">
                         <span className="action-icon">{msg.action.icon || '🚀'}</span>
