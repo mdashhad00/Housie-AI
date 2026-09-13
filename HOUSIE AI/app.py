@@ -9,7 +9,7 @@ Flask + SymPy powered AI with:
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import math, re, os, random, datetime
+import math, re, os, random, datetime, urllib.parse
 
 # SymPy for REAL mathematical solving power
 try:
@@ -718,6 +718,222 @@ def basic_math(query):
     return None
 
 # ═══════════════════════════════════════════
+#   RATE LIMITER (Anti-Spam / Anti-Abuse)
+# ═══════════════════════════════════════════
+import time
+from collections import defaultdict
+
+RATE_LIMIT_STORE = defaultdict(list)
+RATE_LIMIT_PER_MINUTE = 15     # Maximum 15 questions per minute per IP
+RATE_LIMIT_PER_HOUR = 80       # Maximum 80 questions per hour per IP
+
+def get_client_ip():
+    if request.headers.get('x-forwarded-for'):
+        return request.headers.get('x-forwarded-for').split(',')[0].strip()
+    if request.headers.get('x-real-ip'):
+        return request.headers.get('x-real-ip').strip()
+    return request.remote_addr or '127.0.0.1'
+
+def check_rate_limit(ip):
+    now = time.time()
+    # Keep only timestamps within the last hour
+    timestamps = [t for t in RATE_LIMIT_STORE[ip] if now - t < 3600]
+    RATE_LIMIT_STORE[ip] = timestamps
+    
+    # 1. Check minute window
+    recent_minute = [t for t in timestamps if now - t < 60]
+    if len(recent_minute) >= RATE_LIMIT_PER_MINUTE:
+        retry_after = int(60 - (now - recent_minute[0]))
+        return True, max(1, retry_after)
+        
+    # 2. Check hour window
+    if len(timestamps) >= RATE_LIMIT_PER_HOUR:
+        retry_after = int(3600 - (now - timestamps[0]))
+        return True, max(1, retry_after)
+        
+    RATE_LIMIT_STORE[ip].append(now)
+    return False, 0
+
+# ═══════════════════════════════════════════
+#   WHATSAPP & APP LAUNCHER DIRECTORY
+# ═══════════════════════════════════════════
+APP_DIRECTORY = {
+    'whatsapp': {'name': 'WhatsApp', 'icon': '💬', 'url': 'https://web.whatsapp.com', 'protocol': 'whatsapp://'},
+    'youtube': {'name': 'YouTube', 'icon': '▶️', 'url': 'https://www.youtube.com', 'search_url': 'https://www.youtube.com/results?search_query={query}'},
+    'spotify': {'name': 'Spotify', 'icon': '🎵', 'url': 'https://open.spotify.com', 'search_url': 'https://open.spotify.com/search/{query}', 'protocol': 'spotify:'},
+    'google': {'name': 'Google', 'icon': '🔍', 'url': 'https://www.google.com', 'search_url': 'https://www.google.com/search?q={query}'},
+    'instagram': {'name': 'Instagram', 'icon': '📸', 'url': 'https://www.instagram.com', 'search_url': 'https://www.instagram.com/explore/tags/{query}'},
+    'calculator': {'name': 'Calculator', 'icon': '🔢', 'url': 'https://www.google.com/search?q=calculator', 'protocol': 'calculator:'},
+    'camera': {'name': 'Camera', 'icon': '📷', 'url': 'https://webcamtests.com', 'protocol': 'microsoft.windows.camera:'},
+    'gmail': {'name': 'Gmail', 'icon': '✉️', 'url': 'https://mail.google.com', 'search_url': 'https://mail.google.com/mail/u/0/#search/{query}', 'protocol': 'mailto:'},
+    'email': {'name': 'Email', 'icon': '✉️', 'url': 'https://mail.google.com', 'protocol': 'mailto:'},
+    'maps': {'name': 'Google Maps', 'icon': '🗺️', 'url': 'https://www.google.com/maps', 'search_url': 'https://www.google.com/maps/search/{query}'},
+    'github': {'name': 'GitHub', 'icon': '🐙', 'url': 'https://github.com', 'search_url': 'https://github.com/search?q={query}'},
+    'chatgpt': {'name': 'ChatGPT', 'icon': '🤖', 'url': 'https://chatgpt.com'},
+    'netflix': {'name': 'Netflix', 'icon': '🍿', 'url': 'https://www.netflix.com', 'search_url': 'https://www.netflix.com/search?q={query}'},
+    'amazon': {'name': 'Amazon', 'icon': '📦', 'url': 'https://www.amazon.com', 'search_url': 'https://www.amazon.com/s?k={query}'},
+    'flipkart': {'name': 'Flipkart', 'icon': '🛍️', 'url': 'https://www.flipkart.com', 'search_url': 'https://www.flipkart.com/search?q={query}'},
+    'twitter': {'name': 'X (Twitter)', 'icon': '🐦', 'url': 'https://x.com', 'search_url': 'https://x.com/search?q={query}'},
+    'x': {'name': 'X (Twitter)', 'icon': '🐦', 'url': 'https://x.com', 'search_url': 'https://x.com/search?q={query}'},
+    'discord': {'name': 'Discord', 'icon': '🎮', 'url': 'https://discord.com/app', 'protocol': 'discord://'},
+    'telegram': {'name': 'Telegram', 'icon': '✈️', 'url': 'https://web.telegram.org', 'protocol': 'tg://'},
+    'reddit': {'name': 'Reddit', 'icon': '👽', 'url': 'https://www.reddit.com', 'search_url': 'https://www.reddit.com/search/?q={query}'},
+    'settings': {'name': 'Settings', 'icon': '⚙️', 'url': 'https://support.microsoft.com', 'protocol': 'ms-settings:'},
+    'notion': {'name': 'Notion', 'icon': '📝', 'url': 'https://www.notion.so'},
+    'linkedin': {'name': 'LinkedIn', 'icon': '💼', 'url': 'https://www.linkedin.com', 'search_url': 'https://www.linkedin.com/search/results/all/?keywords={query}'},
+    'pinterest': {'name': 'Pinterest', 'icon': '📌', 'url': 'https://www.pinterest.com', 'search_url': 'https://www.pinterest.com/search/pins/?q={query}'},
+    'zomato': {'name': 'Zomato', 'icon': '🍔', 'url': 'https://www.zomato.com'},
+    'swiggy': {'name': 'Swiggy', 'icon': '🍕', 'url': 'https://www.swiggy.com'},
+    'canva': {'name': 'Canva', 'icon': '🎨', 'url': 'https://www.canva.com'},
+    'figma': {'name': 'Figma', 'icon': '🖌️', 'url': 'https://www.figma.com'}
+}
+
+def parse_whatsapp_and_app_command(message, is_hinglish=False):
+    text = message.strip()
+    lower = text.lower()
+
+    # 1. WHATSAPP COMMANDS
+    wa_match = re.search(r'\b(?:whatsapp|wa)\b', lower)
+    if wa_match:
+        phone_match = re.search(r'(?:\+?(\d{10,13}))', text)
+        phone = phone_match.group(1) if phone_match else None
+
+        msg_content = text
+        msg_content = re.sub(r'^(?:please\s+)?(?:can\s+you\s+)?(?:send|text|write)?\s*(?:a\s+)?(?:message|msg|text)?\s*(?:on|to|via)?\s*whatsapp\s*(?:pe|par)?\s*(?:a\s+)?(?:message|msg|text)?\s*(?:karo|bhejo|send|to)?\b', '', msg_content, flags=re.I)
+        msg_content = re.sub(r'^(?:open\s+)?whatsapp\s+and\s+(?:send|text|msg|message)\b', '', msg_content, flags=re.I)
+        msg_content = re.sub(r'^(?:open|kholo|launch)\s+whatsapp\b', '', msg_content, flags=re.I)
+        msg_content = re.sub(r'^whatsapp\s+(?:open\s+karo|kholo)\b', '', msg_content, flags=re.I)
+
+        if phone:
+            msg_content = msg_content.replace(phone, '')
+            msg_content = re.sub(r'\b(?:to|number|no|ko|par|pe)\b', '', msg_content, flags=re.I)
+
+        msg_content = re.sub(r'^\s*[:\-\+]\s*', '', msg_content)
+        msg_content = msg_content.strip(" :-\"'\t\r\n")
+
+        if not msg_content and not phone:
+            wa_url = "https://web.whatsapp.com"
+            preview = "WhatsApp Web / App"
+            resp = "💬 **WhatsApp** open kar raha hoon! 🚀" if is_hinglish else "💬 Launching **WhatsApp** for you! 🚀"
+        elif phone and msg_content:
+            wa_url = f"https://wa.me/{phone}?text={urllib.parse.quote(msg_content)}"
+            preview = msg_content
+            resp = (
+                f"💬 **+{phone}** ke liye WhatsApp text ready hai!\n\n**Message:** \"{msg_content}\"\n\nWhatsApp launch kar raha hoon... 🚀"
+                if is_hinglish else
+                f"💬 Ready to text **+{phone}** on WhatsApp!\n\n**Message:** \"{msg_content}\"\n\nOpening WhatsApp now... 🚀"
+            )
+        elif phone and not msg_content:
+            wa_url = f"https://wa.me/{phone}"
+            preview = f"Chat with +{phone}"
+            resp = (
+                f"💬 **+{phone}** ke saath WhatsApp chat open kar raha hoon! 🚀"
+                if is_hinglish else
+                f"💬 Opening direct WhatsApp chat with **+{phone}**! 🚀"
+            )
+        else:
+            wa_url = f"https://wa.me/?text={urllib.parse.quote(msg_content)}"
+            preview = msg_content
+            resp = (
+                f"💬 WhatsApp message ready hai!\n\n**Message:** \"{msg_content}\"\n\nWhatsApp open ho raha hai, contact choose karo aur send press karo! 🚀"
+                if is_hinglish else
+                f"💬 Prepared your WhatsApp message!\n\n**Message:** \"{msg_content}\"\n\nOpening WhatsApp so you can choose a recipient! 🚀"
+            )
+
+        return {
+            'response': resp,
+            'action': {
+                'type': 'whatsapp',
+                'app': 'WhatsApp',
+                'icon': '💬',
+                'url': wa_url,
+                'phone': phone,
+                'previewText': preview,
+                'label': '🚀 Open WhatsApp & Send'
+            }
+        }
+
+    # 2. APP LAUNCHER & COMMAND EXECUTION
+    open_match = re.search(
+        r'^(?:please\s+)?(?:open|launch|kholo|start|run|go to)\s+(?:app\s+|website\s+)?([a-zA-Z0-9_\.\-]+)(?:\s+(?:and|pe|par|with)?\s+(?:search(?:\s+for)?|play|find|listen to|look for)\s+(.+))?$',
+        lower
+    )
+    if not open_match:
+        open_match_rev = re.search(r'^([a-zA-Z0-9_\.\-]+)\s+(?:open\s+karo|kholo|chalao|start\s+karo)$', lower)
+        if open_match_rev:
+            app_key = open_match_rev.group(1).lower()
+            query = None
+        else:
+            app_key = None
+            query = None
+    else:
+        app_key = open_match.group(1).lower()
+        query = open_match.group(2).strip() if open_match.group(2) else None
+
+    if app_key:
+        if app_key in APP_DIRECTORY:
+            app_info = APP_DIRECTORY[app_key]
+            app_name = app_info['name']
+            icon = app_info['icon']
+            
+            if query and 'search_url' in app_info:
+                target_url = app_info['search_url'].format(query=urllib.parse.quote(query))
+                label = f"{icon} Search on {app_name}"
+                resp = (
+                    f"{icon} **{app_name}** par \"{query}\" search kar raha hoon! 🚀"
+                    if is_hinglish else
+                    f"{icon} Opening **{app_name}** and searching for \"{query}\"! 🚀"
+                )
+            else:
+                target_url = app_info['url']
+                label = f"{icon} Open {app_name}"
+                resp = (
+                    f"{icon} **{app_name}** open kar raha hoon! 🚀"
+                    if is_hinglish else
+                    f"{icon} Launching **{app_name}** for you! 🚀"
+                )
+                
+            return {
+                'response': resp,
+                'action': {
+                    'type': 'open_app',
+                    'app': app_name,
+                    'icon': icon,
+                    'url': target_url,
+                    'query': query,
+                    'label': label
+                }
+            }
+        else:
+            clean_name = app_key.replace('.com', '').replace('.org', '').capitalize()
+            if '.' in app_key:
+                target_url = f"https://{app_key}"
+            elif query:
+                target_url = f"https://www.google.com/search?q={urllib.parse.quote(app_key + ' ' + query)}"
+            else:
+                target_url = f"https://www.{app_key}.com"
+                
+            label = f"🚀 Open {clean_name}"
+            resp = (
+                f"🚀 **{clean_name}** open kar raha hoon! ⚡"
+                if is_hinglish else
+                f"🚀 Launching **{clean_name}** for you! ⚡"
+            )
+            return {
+                'response': resp,
+                'action': {
+                    'type': 'open_app',
+                    'app': clean_name,
+                    'icon': '🌐',
+                    'url': target_url,
+                    'query': query,
+                    'label': label
+                }
+            }
+
+    return None
+
+# ═══════════════════════════════════════════
 #   MAIN CHAT API ENDPOINT
 # ═══════════════════════════════════════════
 @app.route('/api/chat', methods=['GET', 'POST'])
@@ -730,9 +946,34 @@ def chat():
     if not message:
         return jsonify({'error': 'Message is required'}), 400
 
-    text = message.lower()
     lang = detect_lang(message)
     is_h = lang == 'hinglish'
+
+    # Enforce Rate Limiting
+    client_ip = get_client_ip()
+    limited, wait_seconds = check_rate_limit(client_ip)
+    if limited:
+        if is_h:
+            limit_msg = f"⏳ **Thoda aaram karo bhai!** Aapne bohot jaldi-jaldi sawaal puch liye hain. Rate limit hit ho gayi hai ({RATE_LIMIT_PER_MINUTE} sawaal/min). Kripya **{wait_seconds} seconds** ruko phir pucho! 🛑"
+        else:
+            limit_msg = f"⏳ **Slow down, champ!** You've reached the rate limit ({RATE_LIMIT_PER_MINUTE} questions/min). Please wait **{wait_seconds}s** before asking again. 🛑"
+        return jsonify({
+            'response': limit_msg,
+            'error': 'rate_limit_exceeded',
+            'retry_after': wait_seconds,
+            'language': lang
+        }), 429
+
+    # 0. WhatsApp & App Command Parser
+    command_result = parse_whatsapp_and_app_command(message, is_hinglish=is_h)
+    if command_result:
+        return jsonify({
+            'response': command_result['response'],
+            'action': command_result['action'],
+            'language': lang
+        })
+
+    text = message.lower()
 
     # 1. Creator
     if re.search(r'who (created|made|built|coded|developed) (you|housie)|who is your (creator|maker|developer|author)|tumhe kisne (banaya|code kiya|design kiya)|aapko kisne banaya|kisne banaya', text):

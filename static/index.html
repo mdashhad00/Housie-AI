@@ -198,6 +198,90 @@
       text-shadow: 0 0 20px rgba(45,212,191,0.4);
     }
 
+    /* Action Card for WhatsApp & App Launcher */
+    .action-card {
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+    }
+    .action-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .action-icon {
+      font-size: 20px;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .action-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .action-app-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    .action-app-desc {
+      font-size: 11px;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .action-preview-text {
+      padding: 7px 11px;
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid #22c55e;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #e2e8f0;
+      font-style: italic;
+    }
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 14px;
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
+      color: #ffffff !important;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    }
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5);
+    }
+    .action-btn.whatsapp-btn {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+    }
+    .action-btn.whatsapp-btn:hover {
+      box-shadow: 0 6px 18px rgba(37, 211, 102, 0.55);
+    }
+
     /* Welcome screen */
     .welcome {
       flex: 1; display: flex; flex-direction: column;
@@ -243,9 +327,16 @@
       background: linear-gradient(135deg, #6366f1, #a78bfa);
       color: #fff; font-size: 18px; cursor: pointer;
       transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+      font-weight: 600;
     }
-    .send-btn:hover { transform: scale(1.08); box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
-    .send-btn:active { transform: scale(0.95); }
+    .send-btn:hover:not(:disabled) { transform: scale(1.08); box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
+    .send-btn:active:not(:disabled) { transform: scale(0.95); }
+    .send-btn:disabled {
+      opacity: 0.55; cursor: not-allowed; transform: none !important; box-shadow: none !important;
+    }
+    .input-area textarea:disabled {
+      opacity: 0.65; cursor: not-allowed; background: rgba(255, 255, 255, 0.03);
+    }
 
     /* Mobile */
     @media (max-width: 768px) {
@@ -352,13 +443,13 @@ function timeNow() {
 
 // ─── Suggested Chips ───
 const CHIPS = [
+  "💬 text on whatsapp to 9876543210: hey bro",
+  "▶️ open youtube and search lofi beats",
+  "🎵 open spotify and play coldplay",
   "derivative of x^3 + 2x",
   "solve x^2 - 5x + 6 = 0",
-  "factor x^3 - 8",
-  "is 97 prime?",
-  "explain quantum computing",
-  "sin(45) + cos(60)",
-  "10C3",
+  "🔢 open calculator",
+  "📸 open instagram",
   "tell me a joke 😂",
 ];
 
@@ -366,6 +457,131 @@ const CHIPS = [
 function getFallbackResponse(query) {
   const text = (query || '').toLowerCase().trim();
   const isHinglish = /kya|hai|bhai|yaar|kaise|kaisa|kuch|nahi|haan|kaun|kisne|banaya|sunao|bol/.test(text);
+
+  // 0. WhatsApp Commands
+  if (/\b(?:whatsapp|wa)\b/i.test(text)) {
+    const phoneMatch = query.match(/(?:\+?(\d{10,13}))/);
+    const phone = phoneMatch ? phoneMatch[1] : null;
+
+    let msgContent = query
+      .replace(/^(?:please\s+)?(?:can\s+you\s+)?(?:send|text|write)?\s*(?:a\s+)?(?:message|msg|text)?\s*(?:on|to|via)?\s*whatsapp\s*(?:pe|par)?\s*(?:a\s+)?(?:message|msg|text)?\s*(?:karo|bhejo|send|to)?\b/gi, '')
+      .replace(/^(?:open\s+)?whatsapp\s+and\s+(?:send|text|msg|message)\b/gi, '')
+      .replace(/^(?:open|kholo|launch)\s+whatsapp\b/gi, '')
+      .replace(/^whatsapp\s+(?:open\s+karo|kholo)\b/gi, '');
+
+    if (phone) {
+      msgContent = msgContent.replace(phone, '').replace(/\b(?:to|number|no|ko|par|pe)\b/gi, '');
+    }
+    msgContent = msgContent.replace(/^\s*[:\-\+]\s*/, '').trim();
+
+    let waUrl, preview, resp;
+    if (!msgContent && !phone) {
+      waUrl = "https://web.whatsapp.com";
+      preview = "WhatsApp Web / App";
+      resp = isHinglish ? "💬 **WhatsApp** open kar raha hoon! 🚀" : "💬 Launching **WhatsApp** for you! 🚀";
+    } else if (phone && msgContent) {
+      waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(msgContent)}`;
+      preview = msgContent;
+      resp = isHinglish
+        ? `💬 **+${phone}** ke liye WhatsApp text ready hai!\n\n**Message:** "${msgContent}"\n\nWhatsApp launch kar raha hoon... 🚀`
+        : `💬 Ready to text **+${phone}** on WhatsApp!\n\n**Message:** "${msgContent}"\n\nOpening WhatsApp now... 🚀`;
+    } else if (phone && !msgContent) {
+      waUrl = `https://wa.me/${phone}`;
+      preview = `Chat with +${phone}`;
+      resp = isHinglish
+        ? `💬 **+${phone}** ke saath WhatsApp chat open kar raha hoon! 🚀`
+        : `💬 Opening direct WhatsApp chat with **+${phone}**! 🚀`;
+    } else {
+      waUrl = `https://wa.me/?text=${encodeURIComponent(msgContent)}`;
+      preview = msgContent;
+      resp = isHinglish
+        ? `💬 WhatsApp message ready hai!\n\n**Message:** "${msgContent}"\n\nWhatsApp open ho raha hai, contact choose karo aur bhej do! 🚀`
+        : `💬 Prepared your WhatsApp message!\n\n**Message:** "${msgContent}"\n\nOpening WhatsApp so you can choose a recipient! 🚀`;
+    }
+
+    return {
+      response: resp,
+      action: {
+        type: 'whatsapp',
+        app: 'WhatsApp',
+        icon: '💬',
+        url: waUrl,
+        phone: phone,
+        previewText: preview,
+        label: '🚀 Open WhatsApp & Send'
+      },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // 0. App Launcher Commands
+  const openMatch = text.match(/^(?:please\s+)?(?:open|launch|kholo|start|run|go to)\s+(?:app\s+|website\s+)?([a-z0-9_\.\-]+)(?:\s+(?:and|pe|par|with)?\s+(?:search(?:\s+for)?|play|find|listen to|look for)\s+(.+))?$/i);
+  const openMatchRev = !openMatch ? text.match(/^([a-z0-9_\.\-]+)\s+(?:open\s+karo|kholo|chalao|start\s+karo)$/i) : null;
+  const appKey = openMatch ? openMatch[1].toLowerCase() : (openMatchRev ? openMatchRev[1].toLowerCase() : null);
+  const appQuery = openMatch && openMatch[2] ? openMatch[2].trim() : null;
+
+  if (appKey) {
+    const apps = {
+      whatsapp: { name: 'WhatsApp', icon: '💬', url: 'https://web.whatsapp.com' },
+      youtube: { name: 'YouTube', icon: '▶️', url: 'https://www.youtube.com', search: 'https://www.youtube.com/results?search_query=' },
+      spotify: { name: 'Spotify', icon: '🎵', url: 'https://open.spotify.com', search: 'https://open.spotify.com/search/' },
+      google: { name: 'Google', icon: '🔍', url: 'https://www.google.com', search: 'https://www.google.com/search?q=' },
+      instagram: { name: 'Instagram', icon: '📸', url: 'https://www.instagram.com' },
+      calculator: { name: 'Calculator', icon: '🔢', url: 'https://www.google.com/search?q=calculator' },
+      camera: { name: 'Camera', icon: '📷', url: 'https://webcamtests.com' },
+      gmail: { name: 'Gmail', icon: '✉️', url: 'https://mail.google.com' },
+      email: { name: 'Email', icon: '✉️', url: 'https://mail.google.com' },
+      maps: { name: 'Google Maps', icon: '🗺️', url: 'https://www.google.com/maps', search: 'https://www.google.com/maps/search/' },
+      github: { name: 'GitHub', icon: '🐙', url: 'https://github.com', search: 'https://github.com/search?q=' },
+      chatgpt: { name: 'ChatGPT', icon: '🤖', url: 'https://chatgpt.com' },
+      netflix: { name: 'Netflix', icon: '🍿', url: 'https://www.netflix.com', search: 'https://www.netflix.com/search?q=' },
+      amazon: { name: 'Amazon', icon: '📦', url: 'https://www.amazon.com', search: 'https://www.amazon.com/s?k=' },
+      flipkart: { name: 'Flipkart', icon: '🛍️', url: 'https://www.flipkart.com', search: 'https://www.flipkart.com/search?q=' },
+      twitter: { name: 'X (Twitter)', icon: '🐦', url: 'https://x.com', search: 'https://x.com/search?q=' },
+      x: { name: 'X (Twitter)', icon: '🐦', url: 'https://x.com', search: 'https://x.com/search?q=' },
+      discord: { name: 'Discord', icon: '🎮', url: 'https://discord.com/app' },
+      telegram: { name: 'Telegram', icon: '✈️', url: 'https://web.telegram.org' },
+      reddit: { name: 'Reddit', icon: '👽', url: 'https://www.reddit.com', search: 'https://www.reddit.com/search/?q=' },
+      notion: { name: 'Notion', icon: '📝', url: 'https://www.notion.so' },
+      figma: { name: 'Figma', icon: '🖌️', url: 'https://www.figma.com' },
+      canva: { name: 'Canva', icon: '🎨', url: 'https://www.canva.com' }
+    };
+
+    let appInfo = apps[appKey] || {
+      name: appKey.charAt(0).toUpperCase() + appKey.slice(1),
+      icon: '🌐',
+      url: appKey.includes('.') ? `https://${appKey}` : `https://www.${appKey}.com`
+    };
+
+    let targetUrl = appInfo.url;
+    let label = `🚀 Open ${appInfo.name}`;
+    let resp = isHinglish ? `${appInfo.icon} **${appInfo.name}** open kar raha hoon! 🚀` : `${appInfo.icon} Launching **${appInfo.name}** for you! 🚀`;
+
+    if (appQuery) {
+      if (appInfo.search) {
+        targetUrl = appInfo.search + encodeURIComponent(appQuery);
+      } else {
+        targetUrl = `https://www.google.com/search?q=${encodeURIComponent(appInfo.name + ' ' + appQuery)}`;
+      }
+      label = `${appInfo.icon} Search on ${appInfo.name}`;
+      resp = isHinglish
+        ? `${appInfo.icon} **${appInfo.name}** par "${appQuery}" search kar raha hoon! 🚀`
+        : `${appInfo.icon} Opening **${appInfo.name}** and searching for "${appQuery}"! 🚀`;
+    }
+
+    return {
+      response: resp,
+      action: {
+        type: 'open_app',
+        app: appInfo.name,
+        icon: appInfo.icon,
+        url: targetUrl,
+        query: appQuery,
+        label: label
+      },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
 
   // 1. Creator
   if (/who (created|made|built|coded|developed) (you|housie)|who is your (creator|maker|developer)|kisne banaya|tumhe kisne|aapko kisne/.test(text)) {
@@ -381,8 +597,8 @@ function getFallbackResponse(query) {
   if (/^(hi+|hello+|hey+|yo|sup|hola)\b/.test(text)) {
     return {
       response: isHinglish
-        ? "Hey yaar! Housie hoon 😄 Math, Science, Coding — kuch bhi pucho! Main ready hoon!"
-        : "Hello! I'm Housie 😊 Your AI companion. Ask me math, science, coding questions, jokes, and more!",
+        ? "Hey yaar! Housie hoon 😄 Math, Science, Coding, WhatsApp ya Apps kholna — kuch bhi pucho! Main ready hoon!"
+        : "Hello! I'm Housie 😊 Your AI companion. Ask me math, science, coding questions, text on WhatsApp, or launch any app!",
       language: isHinglish ? 'hinglish' : 'english'
     };
   }
@@ -391,8 +607,8 @@ function getFallbackResponse(query) {
   if (/your name|tumhara naam|who are you|kaun ho|what are you/.test(text)) {
     return {
       response: isHinglish
-        ? "Main Housie — tera AI dost! 🧠 Smart math solver aur encyclopedia!"
-        : "I'm Housie — your AI companion! 🧠 Powered with advanced math solving and knowledge!",
+        ? "Main Housie — tera AI dost! 🧠 Smart math solver, app launcher aur encyclopedia!"
+        : "I'm Housie — your AI companion! 🧠 Powered with advanced math solving, app control, and knowledge!",
       language: isHinglish ? 'hinglish' : 'english'
     };
   }
@@ -431,8 +647,8 @@ function getFallbackResponse(query) {
   // 6. Default Fallback
   return {
     response: isHinglish
-      ? "Interesting sawal! 🧠 Math questions try karo jaise:\n• 15 * 45 + 120\n• who created you\n• tell me a joke 😂"
-      : "Great question! 💡 Try asking me:\n• Math problems (e.g. 25 * 40 - 100)\n• Who created you?\n• Tell me a joke 😂",
+      ? "Interesting sawal! 🧠 Try karo:\n• text on whatsapp to 9876543210: hello\n• open youtube and search lofi\n• derivative of x^3 + 2x\n• who created you"
+      : "Great question! 💡 Try asking me:\n• text on whatsapp to 9876543210: hello\n• open youtube and search lofi beats\n• Math problems (e.g. 25 * 40 - 100)\n• Who created you?",
     language: isHinglish ? 'hinglish' : 'english'
   };
 }
@@ -446,6 +662,7 @@ function HousieApp() {
   const [speech, setSpeech] = useState('');
   const [showSpeech, setShowSpeech] = useState(false);
   const [langMode, setLangMode] = useState('🌐 English');
+  const [cooldown, setCooldown] = useState(0);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -455,9 +672,45 @@ function HousieApp() {
 
   useEffect(() => { scrollToBottom(); }, [messages, isTyping]);
 
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown(prev => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
   const sendMessage = async (text) => {
+    if (cooldown > 0) return;
     const msg = text || input.trim();
     if (!msg) return;
+
+    // Client-side rate check: max 15 queries per 60s
+    const now = Date.now();
+    const historyKey = 'housie_req_history';
+    let history = [];
+    try {
+      history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      history = history.filter(t => now - t < 60000);
+    } catch (e) { history = []; }
+
+    if (history.length >= 15) {
+      const wait = Math.max(1, Math.ceil((60000 - (now - history[0])) / 1000));
+      setCooldown(wait);
+      setMessages(prev => [
+        ...prev,
+        { role: 'user', text: msg, time: timeNow() },
+        { role: 'ai', text: `⏳ **Rate limit active!** You are asking questions too fast (max 15/min). Please wait **${wait} seconds** before continuing. 🛑`, time: timeNow() }
+      ]);
+      setInput('');
+      return;
+    }
+
+    history.push(now);
+    try { localStorage.setItem(historyKey, JSON.stringify(history)); } catch (e) {}
+
+    // Short 2s anti-spam cooldown between requests
+    setCooldown(2);
 
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: msg, time: timeNow() }]);
@@ -476,12 +729,31 @@ function HousieApp() {
       });
       const data = await res.json();
 
+      // Handle backend 429 Rate Limit
+      if (res.status === 429 || data.error === 'rate_limit_exceeded') {
+        const wait = data.retry_after || 60;
+        setCooldown(wait);
+        setIsTyping(false);
+        setMessages(prev => [...prev, { role: 'ai', text: data.response, time: timeNow() }]);
+        setSpeech('Limit reached! 🛑');
+        setTalking(true);
+        setTimeout(() => { setTalking(false); setShowSpeech(false); }, 2500);
+        return;
+      }
+
       // Wait a tiny bit for dramatic effect
       await new Promise(r => setTimeout(r, 300 + Math.random() * 500));
 
       setIsTyping(false);
-      setMessages(prev => [...prev, { role: 'ai', text: data.response, time: timeNow() }]);
+      setMessages(prev => [...prev, { role: 'ai', text: data.response, action: data.action, time: timeNow() }]);
       setLangMode(data.language === 'hinglish' ? '🇮🇳 Hinglish' : '🌐 English');
+
+      // Auto-launch action URL if returned
+      if (data.action && data.action.url) {
+        setTimeout(() => {
+          try { window.open(data.action.url, '_blank'); } catch (e) {}
+        }, 400);
+      }
 
       // Robot reply animation
       const donePhrases = ['Yeh lo! ✅', 'Got it! 😊', 'Done! ⚡', 'Dekho! 🎯'];
@@ -493,8 +765,13 @@ function HousieApp() {
       const clientRes = getFallbackResponse(msg);
       await new Promise(r => setTimeout(r, 400));
       setIsTyping(false);
-      setMessages(prev => [...prev, { role: 'ai', text: clientRes.response, time: timeNow() }]);
+      setMessages(prev => [...prev, { role: 'ai', text: clientRes.response, action: clientRes.action, time: timeNow() }]);
       setLangMode(clientRes.language === 'hinglish' ? '🇮🇳 Hinglish' : '🌐 English');
+      if (clientRes.action && clientRes.action.url) {
+        setTimeout(() => {
+          try { window.open(clientRes.action.url, '_blank'); } catch (e) {}
+        }, 400);
+      }
       setSpeech('Yeh lo! ✅');
       setTalking(true);
       setTimeout(() => { setTalking(false); setShowSpeech(false); }, 2200);
@@ -504,7 +781,9 @@ function HousieApp() {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      if (cooldown <= 0 && input.trim()) {
+        sendMessage();
+      }
     }
   };
 
@@ -541,8 +820,8 @@ function HousieApp() {
             <div className="welcome">
               <div className="welcome-title">Hey! I'm Housie 🧠</div>
               <div className="welcome-sub">
-                Powered by <strong>Python + SymPy</strong> — I can solve <strong>ANY math problem</strong>!
-                Derivatives, integrals, equations, factoring, prime checks, and 30+ science topics.
+                Powered by <strong>Python + SymPy</strong> — I can solve <strong>ANY math problem</strong>,
+                text on <strong>WhatsApp</strong>, launch &amp; search <strong>any app</strong>, and explain 30+ science topics.
                 Try me!
               </div>
               <div className="chips">
@@ -557,6 +836,32 @@ function HousieApp() {
                 <div className={`avatar ${msg.role}`}>{msg.role === 'ai' ? '🧠' : '👤'}</div>
                 <div className="msg-content">
                   <div className={`bubble ${msg.role}`} dangerouslySetInnerHTML={{ __html: formatText(msg.text) }} />
+                  {msg.action && (
+                    <div className="action-card">
+                      <div className="action-card-header">
+                        <span className="action-icon">{msg.action.icon || '🚀'}</span>
+                        <div className="action-card-info">
+                          <div className="action-app-name">{msg.action.app}</div>
+                          <div className="action-app-desc">
+                            {msg.action.phone ? `To: +${msg.action.phone}` : (msg.action.query ? `Search: "${msg.action.query}"` : msg.action.url)}
+                          </div>
+                        </div>
+                      </div>
+                      {msg.action.previewText && (
+                        <div className="action-preview-text">
+                          "{msg.action.previewText}"
+                        </div>
+                      )}
+                      <a
+                        href={msg.action.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`action-btn ${msg.action.type === 'whatsapp' ? 'whatsapp-btn' : ''}`}
+                      >
+                        {msg.action.label || 'Open Now ⚡'}
+                      </a>
+                    </div>
+                  )}
                   <div className="timestamp">{msg.time}</div>
                 </div>
               </div>
@@ -586,10 +891,18 @@ function HousieApp() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask anything... math, science, coding 🧠"
+            placeholder={cooldown > 0 ? `⏳ Rate limit active: wait ${cooldown}s...` : "Ask math, science, or say 'open youtube' / 'whatsapp hello' 🧠"}
             rows={1}
+            disabled={cooldown > 0 || isTyping}
           />
-          <button className="send-btn" onClick={() => sendMessage()}>🚀</button>
+          <button
+            className="send-btn"
+            onClick={() => sendMessage()}
+            disabled={cooldown > 0 || isTyping || !input.trim()}
+            style={cooldown > 0 ? { minWidth: '56px', width: 'auto', borderRadius: '22px', padding: '0 10px', fontSize: '12px' } : {}}
+          >
+            {cooldown > 0 ? `⏳ ${cooldown}s` : '🚀'}
+          </button>
         </div>
       </div>
     </React.Fragment>
