@@ -1,0 +1,94 @@
+name: Build & Release Housie AI Apps (Windows, macOS, Linux, Android)
+
+on:
+  push:
+    tags:
+      - 'v*'
+    paths:
+      - 'electron/**'
+      - '.github/workflows/build-apps.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-desktop:
+    name: Build Desktop App (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: electron/package.json
+
+      - name: Install Dependencies
+        working-directory: ./electron
+        run: npm install
+
+      - name: Build Windows
+        if: matrix.os == 'windows-latest'
+        working-directory: ./electron
+        run: npm run dist:win
+
+      - name: Build macOS
+        if: matrix.os == 'macos-latest'
+        working-directory: ./electron
+        run: npm run dist:mac
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Build Linux
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: ./electron
+        run: npm run dist:linux
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-binaries-${{ matrix.os }}
+          path: |
+            electron/dist/*.exe
+            electron/dist/*.dmg
+            electron/dist/*.AppImage
+            electron/dist/*.deb
+            electron/dist/*.zip
+
+  release:
+    name: Publish Release Assets
+    needs: build-desktop
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          name: "Housie AI v2.0 - Native Apps (Windows, macOS, Linux, Android)"
+          body: |
+            ## 🚀 Housie AI v2.0 Official Native App Release
+            
+            Welcome to the official downloadable apps for **Housie AI**!
+            
+            ### 📥 Downloads:
+            - 🪟 **Windows**: `Housie-AI-Setup.exe` (Windows 10 / 11 64-bit)
+            - 🍎 **macOS**: `Housie-AI.dmg` (Apple Silicon & Intel)
+            - 🐧 **Linux**: `Housie-AI.AppImage` & `.deb` (Ubuntu, Debian, Fedora, Arch)
+            - 🤖 **Android**: Direct WebAPK / PWA installation available on https://housie-ai.vercel.app or build with Android Studio
+          files: |
+            desktop-binaries-*/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

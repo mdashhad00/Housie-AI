@@ -1,0 +1,67 @@
+{
+  "name": "housie-ai-desktop",
+  "productName": "Housie AI",
+  "version": "2.0.0",
+  "description": "Ultra-Smart AI Companion with SymPy Math Engine, Voice STT/TTS & Device Control",
+  "main": "main.js",
+  "author": "Housie AI Team",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win --x64",
+    "dist:mac": "electron-builder --mac --universal",
+    "dist:linux": "electron-builder --linux AppImage deb",
+    "dist:all": "electron-builder -mwl"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^28.2.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.housieai.desktop",
+    "productName": "Housie AI",
+    "copyright": "Copyright © 2026 Housie AI",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "../index.html",
+      "../minecraft_bg.png"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "Housie-AI-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Housie AI"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.productivity",
+      "artifactName": "Housie-AI-${version}-${arch}.${ext}"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility",
+      "artifactName": "Housie-AI-${version}.${ext}"
+    }
+  }
+}

@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Housie AI — Your Smart AI Companion</title>
   <meta name="description" content="Housie AI: SymPy-powered math solver with 30+ science topics, bilingual English/Hinglish support. Now with Whisper.cpp voice input & TTS." />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Housie AI" />
 
   <!-- React + Babel CDN for React without Node.js -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -450,6 +455,126 @@
     .device-card-btn.red { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 3px 10px rgba(239,68,68,0.3); }
     .device-card-btn.teal { background: linear-gradient(135deg, #2dd4bf, #0d9488); box-shadow: 0 3px 10px rgba(45,212,191,0.3); }
 
+    /* App Download Card */
+    .download-card {
+      margin-top: 12px; padding: 18px;
+      background: linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.85));
+      border: 1px solid rgba(167,139,250,0.3);
+      border-radius: 18px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .download-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;
+    }
+    .download-card-title {
+      display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: #f8fafc;
+    }
+    .download-version-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+      background: rgba(45,212,191,0.15); border: 1px solid rgba(45,212,191,0.35); color: #2dd4bf;
+    }
+    .download-os-banner {
+      font-size: 11px; color: #a5b4fc; background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(99,102,241,0.25); border-radius: 8px; padding: 6px 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .platform-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .platform-card {
+      padding: 12px; border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex; flex-direction: column; gap: 8px;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .platform-card:hover {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(167,139,250,0.4);
+      transform: translateY(-2px);
+    }
+    .platform-card.recommended {
+      background: linear-gradient(135deg, rgba(99,102,241,0.18), rgba(45,212,191,0.12));
+      border-color: rgba(45,212,191,0.5);
+      box-shadow: 0 0 16px rgba(45,212,191,0.18);
+    }
+    .recommended-pill {
+      position: absolute; top: -7px; right: 10px;
+      background: linear-gradient(135deg, #6366f1, #2dd4bf);
+      color: #fff; font-size: 9px; font-weight: 800; padding: 1px 7px;
+      border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .platform-head {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .platform-icon {
+      font-size: 22px; width: 34px; height: 34px; border-radius: 10px;
+      background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center;
+    }
+    .platform-name {
+      font-size: 13px; font-weight: 700; color: #f1f5f9; display: flex; align-items: center; gap: 6px;
+    }
+    .platform-ext {
+      font-size: 10px; color: #94a3b8; background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 4px;
+    }
+    .platform-desc {
+      font-size: 10px; color: #94a3b8; line-height: 1.3;
+    }
+    .platform-btn {
+      padding: 7px 12px; border-radius: 8px; border: none; cursor: pointer;
+      font-size: 11px; font-weight: 700; text-decoration: none; text-align: center;
+      background: linear-gradient(135deg, #6366f1, #a78bfa); color: #fff;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.2s;
+    }
+    .platform-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+    }
+    .platform-btn.alt {
+      background: rgba(45,212,191,0.15); border: 1px solid rgba(45,212,191,0.4); color: #2dd4bf;
+    }
+    .platform-btn.alt:hover {
+      background: rgba(45,212,191,0.25);
+    }
+    .download-card-footer {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);
+      font-size: 11px;
+    }
+    .download-github-link {
+      color: #94a3b8; text-decoration: none; transition: color 0.2s;
+    }
+    .download-github-link:hover { color: #2dd4bf; }
+    .copy-link-btn {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px; padding: 4px 10px; font-size: 10px; color: #cbd5e1;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .copy-link-btn:hover {
+      background: rgba(255,255,255,0.12); color: #fff;
+    }
+
+    /* Top bar Get App button */
+    .get-app-btn {
+      padding: 4px 12px; border-radius: 12px;
+      background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(45,212,191,0.2));
+      border: 1px solid rgba(45,212,191,0.4);
+      color: #2dd4bf; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .get-app-btn:hover {
+      background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(45,212,191,0.35));
+      border-color: #2dd4bf;
+      transform: scale(1.04);
+      box-shadow: 0 0 12px rgba(45,212,191,0.3);
+    }
+
     /* Mobile */
     @media (max-width: 768px) {
       #root { flex-direction: column; gap: 10px; padding: 10px; }
@@ -694,8 +819,168 @@ function DeviceActionCard({ action, setMessages }) {
   );
 }
 
+// ─── OS Detection Helper ───
+function detectUserOS() {
+  const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+  if (/android/i.test(ua)) return 'android';
+  if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+  if (/macintosh|mac os x/i.test(ua)) return 'mac';
+  if (/windows|win32|win64/i.test(ua)) return 'windows';
+  if (/linux/i.test(ua)) return 'linux';
+  return 'windows';
+}
+
+// ─── Download Action Card Component ───
+function DownloadActionCard({ action }) {
+  const [copied, setCopied] = useState(false);
+  const [pwaInstalled, setPwaInstalled] = useState(false);
+  const userOS = action.detectedOS || detectUserOS();
+
+  const handleInstallPwa = async () => {
+    if (window.deferredInstallPrompt) {
+      window.deferredInstallPrompt.prompt();
+      const { outcome } = await window.deferredInstallPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setPwaInstalled(true);
+      }
+      window.deferredInstallPrompt = null;
+    } else {
+      alert('📲 On Android / Chrome: Tap browser menu (⋮) and choose "Install App" or "Add to Home Screen" to install Housie AI!');
+    }
+  };
+
+  const handleCopyLink = () => {
+    const link = 'https://github.com/mdashhad00/Housie-AI/releases';
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const platforms = [
+    {
+      id: 'windows',
+      name: 'Windows',
+      icon: '🪟',
+      ext: '.exe',
+      desc: 'Windows 10 / 11 (64-bit Installer)',
+      url: 'https://github.com/mdashhad00/Housie-AI/releases/latest/download/Housie-AI-Setup.exe',
+      fallbackUrl: 'https://github.com/mdashhad00/Housie-AI/releases'
+    },
+    {
+      id: 'mac',
+      name: 'macOS',
+      icon: '🍎',
+      ext: '.dmg',
+      desc: 'Apple Silicon (M1/M2/M3) & Intel',
+      url: 'https://github.com/mdashhad00/Housie-AI/releases/latest/download/Housie-AI.dmg',
+      fallbackUrl: 'https://github.com/mdashhad00/Housie-AI/releases'
+    },
+    {
+      id: 'linux',
+      name: 'Linux',
+      icon: '🐧',
+      ext: '.AppImage',
+      desc: 'Ubuntu, Debian, Fedora, Arch',
+      url: 'https://github.com/mdashhad00/Housie-AI/releases/latest/download/Housie-AI.AppImage',
+      fallbackUrl: 'https://github.com/mdashhad00/Housie-AI/releases'
+    },
+    {
+      id: 'android',
+      name: 'Android',
+      icon: '🤖',
+      ext: '.apk / PWA',
+      desc: 'Direct APK + Instant 1-Tap Install',
+      url: 'https://github.com/mdashhad00/Housie-AI/releases/latest/download/Housie-AI.apk',
+      fallbackUrl: 'https://github.com/mdashhad00/Housie-AI/releases',
+      isAndroid: true
+    }
+  ];
+
+  const osLabels = {
+    windows: 'Windows',
+    mac: 'macOS',
+    linux: 'Linux',
+    android: 'Android'
+  };
+
+  return (
+    <div className="download-card">
+      <div className="download-card-header">
+        <div className="download-card-title">
+          <span>📲</span>
+          <span>Download Housie AI App</span>
+        </div>
+        <span className="download-version-badge">v2.0 Native</span>
+      </div>
+
+      <div className="download-os-banner">
+        <span>✨</span>
+        <span>Detected your device: <strong>{osLabels[userOS] || 'Desktop'}</strong> — Best version highlighted!</span>
+      </div>
+
+      <div className="platform-grid">
+        {platforms.map(p => {
+          const isRec = userOS === p.id;
+          return (
+            <div key={p.id} className={`platform-card ${isRec ? 'recommended' : ''}`}>
+              {isRec && <div className="recommended-pill">⭐ Recommended</div>}
+              <div className="platform-head">
+                <div className="platform-icon">{p.icon}</div>
+                <div>
+                  <div className="platform-name">
+                    {p.name} <span className="platform-ext">{p.ext}</span>
+                  </div>
+                  <div className="platform-desc">{p.desc}</div>
+                </div>
+              </div>
+
+              <a
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="platform-btn"
+                onClick={() => {
+                  setTimeout(() => { window.open(p.fallbackUrl, '_blank'); }, 2000);
+                }}
+              >
+                ⬇️ Download {p.ext.split(' ')[0]}
+              </a>
+
+              {p.isAndroid && (
+                <button
+                  className="platform-btn alt"
+                  onClick={handleInstallPwa}
+                >
+                  {pwaInstalled ? '✅ App Installed!' : '📲 1-Tap Install on Phone'}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="download-card-footer">
+        <button className="copy-link-btn" onClick={handleCopyLink}>
+          {copied ? '✅ Link Copied!' : '📋 Copy Download Link'}
+        </button>
+        <a
+          href="https://github.com/mdashhad00/Housie-AI/releases"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="download-github-link"
+        >
+          View all releases on GitHub ↗
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // ─── Suggested Chips ───
 const CHIPS = [
+  "📲 download the app (Windows / Mac / Linux / Android)",
   "💬 text on whatsapp to 9876543210: hey bro",
   "▶️ open youtube and search lofi beats",
   "🎵 open spotify and play coldplay",
@@ -714,6 +999,36 @@ function getFallbackResponse(query) {
   const cleanText = raw.replace(/^[^\w\s]+/g, '').trim();
   const text = (cleanText || raw).toLowerCase();
   const isHinglish = /kya|hai|bhai|yaar|kaise|kaisa|kuch|nahi|haan|kaun|kisne|banaya|sunao|bol/.test(text);
+
+  // 0. App Download Commands (Windows, Mac, Linux, Android)
+  const isAppDownload = (
+    /\b(?:download|install|get|give|create)\b.*\b(?:app|application|apk|setup|exe|dmg|software)\b/i.test(text) ||
+    /\b(?:app|application|apk)\b.*\b(?:download|link|links|install|get)\b/i.test(text) ||
+    /\b(?:windows|mac|macos|linux|android)\s*(?:app|version|apk|setup|installer|download)\b/i.test(text) ||
+    /\b(?:app|download|install|apk)\b$/i.test(cleanText) ||
+    /(?:app\s*(?:chahiye|kaise\s*download|kaha\s*se|ka\s*link|download\s*karna|bhejo|dedo))/i.test(text) ||
+    /(?:is\s*there\s*an\s*app|do\s*you\s*have\s*an\s*app|provide\s*(?:the\s*)?download\s*link)/i.test(text)
+  );
+
+  if (isAppDownload) {
+    const userOS = detectUserOS();
+    const osNames = { windows: 'Windows', mac: 'macOS', linux: 'Linux', android: 'Android' };
+    const deviceName = osNames[userOS] || 'your device';
+
+    const resp = isHinglish
+      ? `📲 **Housie AI sabhi platforms par available hai!**\n\nNeeche diye gaye download card se aap **Windows, macOS, Linux, aur Android** ke liye direct download kar sakte hain!\n\nAapke device (**${deviceName}**) ke liye best version highlight kar diya hai! 🚀`
+      : `📲 **Housie AI is available across all platforms!**\n\nChoose your platform below to download Housie AI for **Windows, macOS, Linux, or Android**.\n\nWe have automatically highlighted the recommended version for your **${deviceName}**! 🚀`;
+
+    return {
+      response: resp,
+      action: {
+        type: 'download_app',
+        detectedOS: userOS,
+        releaseUrl: 'https://github.com/mdashhad00/Housie-AI/releases'
+      },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
 
   // 0. WhatsApp Commands
   if (/\b(?:whatsapp|wa)\b/i.test(text)) {
@@ -1489,6 +1804,15 @@ function HousieApp() {
           </div>
           <span className="sympy-badge">⚡ SymPy</span>
 
+          {/* Get App Quick Button */}
+          <button
+            className="get-app-btn"
+            onClick={() => sendMessage('download app')}
+            title="Download Housie AI for Windows, Mac, Linux & Android"
+          >
+            📲 Get App
+          </button>
+
           {/* TTS Toggle */}
           <button
             className={`tts-btn ${ttsEnabled ? 'active' : ''}`}
@@ -1536,7 +1860,9 @@ function HousieApp() {
                 <div className={`avatar ${msg.role}`}>{msg.role === 'ai' ? '🧠' : '👤'}</div>
                 <div className="msg-content">
                   <div className={`bubble ${msg.role}`} dangerouslySetInnerHTML={{ __html: formatText(msg.text) }} />
-                  {msg.action && msg.action.type === 'device' ? (
+                  {msg.action && msg.action.type === 'download_app' ? (
+                    <DownloadActionCard action={msg.action} />
+                  ) : msg.action && msg.action.type === 'device' ? (
                     <DeviceActionCard action={msg.action} setMessages={setMessages} />
                   ) : msg.action && (
                     <div className="action-card">
@@ -1646,12 +1972,25 @@ function HousieApp() {
 ReactDOM.createRoot(document.getElementById('root')).render(<HousieApp />);
 </script>
 
-<!-- Load speech synthesis voices eagerly -->
+<!-- Load speech synthesis voices eagerly & register PWA Service Worker -->
 <script>
   if (window.speechSynthesis) {
     window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); };
     window.speechSynthesis.getVoices();
   }
+
+  // Register PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js').catch(function() {});
+    });
+  }
+
+  // Capture Android PWA install event for 1-tap installation
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    window.deferredInstallPrompt = e;
+  });
 </script>
 
 </body>

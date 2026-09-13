@@ -986,6 +986,19 @@ def chat():
 
     text = message.lower()
 
+    # 0.5. App Download Commands (Windows, Mac, Linux, Android)
+    if re.search(r'\b(download|install|get|give|create)\b.*\b(app|application|apk|setup|exe|dmg|software)\b|\b(app|application|apk)\b.*\b(download|link|links|install|get)\b|\b(windows|mac|macos|linux|android)\s*(app|version|apk|setup|installer|download)\b|app\s*(chahiye|kaise\s*download|kaha\s*se|ka\s*link|download\s*karna)|^(app|download|install|apk)$', text):
+        resp = ("📲 **Housie AI sabhi platforms par available hai!**\n\nNeeche diye gaye download card se aap **Windows, macOS, Linux, aur Android** ke liye direct download kar sakte hain! 🚀" if is_h else
+                "📲 **Housie AI is available across all platforms!**\n\nChoose your platform below to download Housie AI for **Windows, macOS, Linux, or Android**! 🚀")
+        return jsonify({
+            'response': resp,
+            'action': {
+                'type': 'download_app',
+                'releaseUrl': 'https://github.com/mdashhad00/Housie-AI/releases'
+            },
+            'language': lang
+        })
+
     # 1. Creator
     if re.search(r'who (created|made|built|coded|developed) (you|housie)|who is your (creator|maker|developer|author)|tumhe kisne (banaya|code kiya|design kiya)|aapko kisne banaya|kisne banaya', text):
         return jsonify({'response': CREATOR_HI if is_h else CREATOR_EN, 'language': lang})

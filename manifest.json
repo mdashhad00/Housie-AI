@@ -1,0 +1,26 @@
+{
+  "name": "Housie AI — Smart Companion",
+  "short_name": "Housie AI",
+  "description": "Ultra-Smart AI Companion with SymPy Math Engine, Voice STT/TTS & Device Control",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/minecraft_bg.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/minecraft_bg.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "utilities", "productivity"],
+  "screenshots": []
+}
