@@ -455,7 +455,9 @@ const CHIPS = [
 
 // ─── Client Fallback Engine (Zero Downtime) ───
 function getFallbackResponse(query) {
-  const text = (query || '').toLowerCase().trim();
+  const raw = (query || '').trim();
+  const cleanText = raw.replace(/^[^\w\s]+/g, '').trim();
+  const text = (cleanText || raw).toLowerCase();
   const isHinglish = /kya|hai|bhai|yaar|kaise|kaisa|kuch|nahi|haan|kaun|kisne|banaya|sunao|bol/.test(text);
 
   // 0. WhatsApp Commands
@@ -463,7 +465,7 @@ function getFallbackResponse(query) {
     const phoneMatch = query.match(/(?:\+?(\d{10,13}))/);
     const phone = phoneMatch ? phoneMatch[1] : null;
 
-    let msgContent = query
+    let msgContent = cleanText
       .replace(/^(?:please\s+)?(?:can\s+you\s+)?(?:send|text|write)?\s*(?:a\s+)?(?:message|msg|text)?\s*(?:on|to|via)?\s*whatsapp\s*(?:pe|par)?\s*(?:a\s+)?(?:message|msg|text)?\s*(?:karo|bhejo|send|to)?\b/gi, '')
       .replace(/^(?:open\s+)?whatsapp\s+and\s+(?:send|text|msg|message)\b/gi, '')
       .replace(/^(?:open|kholo|launch)\s+whatsapp\b/gi, '')
@@ -515,10 +517,19 @@ function getFallbackResponse(query) {
   }
 
   // 0. App Launcher Commands
-  const openMatch = text.match(/^(?:please\s+)?(?:open|launch|kholo|start|run|go to)\s+(?:app\s+|website\s+)?([a-z0-9_\.\-]+)(?:\s+(?:and|pe|par|with)?\s+(?:search(?:\s+for)?|play|find|listen to|look for)\s+(.+))?$/i);
-  const openMatchRev = !openMatch ? text.match(/^([a-z0-9_\.\-]+)\s+(?:open\s+karo|kholo|chalao|start\s+karo)$/i) : null;
-  const appKey = openMatch ? openMatch[1].toLowerCase() : (openMatchRev ? openMatchRev[1].toLowerCase() : null);
-  const appQuery = openMatch && openMatch[2] ? openMatch[2].trim() : null;
+  const searchOnMatch = cleanText.match(/^(?:please\s+)?(?:search(?:\s+for)?|play|find|look for)\s+(.+?)\s+(?:on|in|pe|par)\s+([a-z0-9_\.\-]+)$/i);
+  let appKey = null;
+  let appQuery = null;
+
+  if (searchOnMatch) {
+    appKey = searchOnMatch[2].toLowerCase();
+    appQuery = searchOnMatch[1].trim();
+  } else {
+    const openMatch = cleanText.match(/^(?:please\s+)?(?:open|launch|kholo|start|run|go to)\s+(?:app\s+|website\s+)?([a-z0-9_\.\-]+)(?:\s+(?:and|pe|par|with)?\s+(?:search(?:\s+for)?|play|find|listen to|look for)\s+(.+))?$/i);
+    const openMatchRev = !openMatch ? cleanText.match(/^([a-z0-9_\.\-]+)\s+(?:open\s+karo|kholo|chalao|start\s+karo)$/i) : null;
+    appKey = openMatch ? openMatch[1].toLowerCase() : (openMatchRev ? openMatchRev[1].toLowerCase() : null);
+    appQuery = openMatch && openMatch[2] ? openMatch[2].trim() : null;
+  }
 
   if (appKey) {
     const apps = {

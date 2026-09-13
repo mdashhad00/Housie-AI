@@ -791,14 +791,16 @@ APP_DIRECTORY = {
 def parse_whatsapp_and_app_command(message, is_hinglish=False):
     text = message.strip()
     lower = text.lower()
+    clean_text = re.sub(r'^[^\w\s]+', '', text).strip()
+    clean_lower = clean_text.lower() if clean_text else lower
 
     # 1. WHATSAPP COMMANDS
-    wa_match = re.search(r'\b(?:whatsapp|wa)\b', lower)
+    wa_match = re.search(r'\b(?:whatsapp|wa)\b', clean_lower)
     if wa_match:
         phone_match = re.search(r'(?:\+?(\d{10,13}))', text)
         phone = phone_match.group(1) if phone_match else None
 
-        msg_content = text
+        msg_content = clean_text
         msg_content = re.sub(r'^(?:please\s+)?(?:can\s+you\s+)?(?:send|text|write)?\s*(?:a\s+)?(?:message|msg|text)?\s*(?:on|to|via)?\s*whatsapp\s*(?:pe|par)?\s*(?:a\s+)?(?:message|msg|text)?\s*(?:karo|bhejo|send|to)?\b', '', msg_content, flags=re.I)
         msg_content = re.sub(r'^(?:open\s+)?whatsapp\s+and\s+(?:send|text|msg|message)\b', '', msg_content, flags=re.I)
         msg_content = re.sub(r'^(?:open|kholo|launch)\s+whatsapp\b', '', msg_content, flags=re.I)
@@ -854,21 +856,30 @@ def parse_whatsapp_and_app_command(message, is_hinglish=False):
         }
 
     # 2. APP LAUNCHER & COMMAND EXECUTION
-    open_match = re.search(
-        r'^(?:please\s+)?(?:open|launch|kholo|start|run|go to)\s+(?:app\s+|website\s+)?([a-zA-Z0-9_\.\-]+)(?:\s+(?:and|pe|par|with)?\s+(?:search(?:\s+for)?|play|find|listen to|look for)\s+(.+))?$',
-        lower
+    # 2a. Reverse search/play syntax: "play <query> on <app>" or "search <query> on <app>"
+    search_on_match = re.search(
+        r'^(?:please\s+)?(?:search(?:\s+for)?|play|find|look for)\s+(.+?)\s+(?:on|in|pe|par)\s+([a-zA-Z0-9_\.\-]+)$',
+        clean_lower
     )
-    if not open_match:
-        open_match_rev = re.search(r'^([a-zA-Z0-9_\.\-]+)\s+(?:open\s+karo|kholo|chalao|start\s+karo)$', lower)
-        if open_match_rev:
-            app_key = open_match_rev.group(1).lower()
-            query = None
-        else:
-            app_key = None
-            query = None
+    if search_on_match:
+        app_key = search_on_match.group(2).lower()
+        query = search_on_match.group(1).strip()
     else:
-        app_key = open_match.group(1).lower()
-        query = open_match.group(2).strip() if open_match.group(2) else None
+        open_match = re.search(
+            r'^(?:please\s+)?(?:open|launch|kholo|start|run|go to)\s+(?:app\s+|website\s+)?([a-zA-Z0-9_\.\-]+)(?:\s+(?:and|pe|par|with)?\s+(?:search(?:\s+for)?|play|find|listen to|look for)\s+(.+))?$',
+            clean_lower
+        )
+        if not open_match:
+            open_match_rev = re.search(r'^([a-zA-Z0-9_\.\-]+)\s+(?:open\s+karo|kholo|chalao|start\s+karo)$', clean_lower)
+            if open_match_rev:
+                app_key = open_match_rev.group(1).lower()
+                query = None
+            else:
+                app_key = None
+                query = None
+        else:
+            app_key = open_match.group(1).lower()
+            query = open_match.group(2).strip() if open_match.group(2) else None
 
     if app_key:
         if app_key in APP_DIRECTORY:
