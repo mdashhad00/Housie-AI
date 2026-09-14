@@ -1071,6 +1071,74 @@ def chat():
     return jsonify({'response': pick(fallbacks), 'language': lang})
 
 # ═══════════════════════════════════════════
+#   COMPUTER CONTROL & LOCAL LLM ENGINE API
+# ═══════════════════════════════════════════
+try:
+    from core.llm_engine import LLMEngine
+    from core.planner import Planner
+    from controller.factory import get_controller
+    CONTROL_AVAILABLE = True
+except Exception as e:
+    CONTROL_AVAILABLE = False
+    print(f"Warning: Control layer import failed: {e}")
+
+@app.route('/api/control', methods=['POST'])
+def api_control():
+    if not CONTROL_AVAILABLE:
+        return jsonify({'success': False, 'error': 'Control layer unavailable'}), 503
+
+    data = request.get_json(silent=True) or {}
+    message = data.get('message', '').strip()
+    execute = bool(data.get('execute', True))
+
+    if not message:
+        return jsonify({'success': False, 'error': 'Empty message'}), 400
+
+    engine = LLMEngine.get_instance()
+    controller = get_controller()
+
+    # Generate tool plan via Qwen 1.5B or Planner fallback
+    plan = engine.generate_tool_plan(message)
+
+    results = []
+    if execute and plan:
+        for step in plan:
+            t_name = step.get('tool')
+            t_args = step.get('args', {})
+            res = controller.execute_tool(t_name, t_args)
+            results.append(res)
+
+    return jsonify({
+        'success': True,
+        'platform': controller.platform_name,
+        'model_status': engine.model_status,
+        'plan': plan,
+        'results': results,
+        'executed': execute and len(results) > 0
+    })
+
+@app.route('/api/control/models', methods=['GET'])
+def api_control_models():
+    if not CONTROL_AVAILABLE:
+        return jsonify({'status': 'unavailable'})
+    engine = LLMEngine.get_instance()
+    return jsonify({
+        'status': engine.model_status,
+        'progress': engine.download_progress,
+        'model': 'Qwen2.5-1.5B-Instruct-Q4_K_M.gguf',
+        'ram_target': '4GB',
+        'platform': get_controller().platform_name
+    })
+
+@app.route('/api/control/download-model', methods=['POST'])
+def api_download_model():
+    if not CONTROL_AVAILABLE:
+        return jsonify({'success': False, 'error': 'Unavailable'}), 503
+    engine = LLMEngine.get_instance()
+    success = engine.download_model()
+    return jsonify({'success': success, 'status': engine.model_status})
+
+# ═══════════════════════════════════════════
 #   SERVE STATIC FILES
 # ═══════════════════════════════════════════
 _STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')

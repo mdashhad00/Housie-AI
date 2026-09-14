@@ -1784,11 +1784,59 @@ function parseVoiceCommand(raw) {
 
 // ─── Query Housie AI Server or Client Fallback ───
 async function queryHousieAI(query) {
-  // First check local device/command parser
+  // 1. Check if native Electron desktop computer control is available
+  if (window.electronAPI && window.electronAPI.executeControlCommand) {
+    try {
+      const res = await window.electronAPI.executeControlCommand(query);
+      if (res && res.plan && res.plan.length > 0) {
+        const planText = res.plan.map((s, idx) => `• **Step ${idx+1}:** \`${s.tool}(${JSON.stringify(s.args)})\``).join('\n');
+        return {
+          response: `🖥️ **Desktop Computer Action Executed** (${(res.platform||'OS').toUpperCase()}):\n${planText}\n\n✅ Automation executed successfully!`,
+          action: {
+            type: 'control',
+            icon: '🖥️',
+            app: `${(res.platform||'OS').toUpperCase()} Control`,
+            label: `Executed ${res.plan.length} Action(s)`,
+            sub: res.plan[0].explanation || 'Native OS automation',
+            btnText: 'Completed ✅'
+          }
+        };
+      }
+    } catch(e) {}
+  }
+
+  // 2. Try backend /api/control (Local Qwen2.5 1.5B / Platform Controller)
+  try {
+    const res = await fetch('/api/control', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: query, execute: true })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.plan && data.plan.length > 0) {
+        const planText = data.plan.map((s, idx) => `• **Step ${idx+1}:** \`${s.tool}(${JSON.stringify(s.args)})\``).join('\n');
+        const statusText = data.executed ? "✅ Executed on host system" : "⚡ Action planned";
+        return {
+          response: `🤖 **Qwen2.5 1.5B Tool Selection** (${(data.platform||'OS').toUpperCase()}):\n${planText}\n\n${statusText}!`,
+          action: {
+            type: 'control',
+            icon: '🖥️',
+            app: `${(data.platform||'OS').toUpperCase()} Controller`,
+            label: `Tool: ${data.plan[0].tool}`,
+            sub: data.plan[0].explanation || 'Computer control pipeline',
+            btnText: 'Executed ✅'
+          }
+        };
+      }
+    }
+  } catch(e) {}
+
+  // 3. Check client-side command parser
   const parsed = parseVoiceCommand(query);
   if (parsed) return parsed;
 
-  // Try backend API
+  // 4. Try general backend chat API
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
@@ -1802,7 +1850,7 @@ async function queryHousieAI(query) {
   } catch(e) {}
 
   return {
-    response: `💡 I heard: **"${query}"**\n\nSpeechAssist is fully active! Try asking:\n• "Text on WhatsApp to 9876543210: Hey"\n• "Open YouTube and search chill music"\n• "Solve 125 * 34 - 500"\n• "Tell me a joke"`
+    response: `💡 I heard: **"${query}"**\n\nSpeechAssist is active! Try asking:\n• "Open Chrome and search YouTube for Minecraft"\n• "Text on WhatsApp to 9876543210: Hey"\n• "Open Notepad and type Hello"\n• "Take a screenshot"`
   };
 }
 

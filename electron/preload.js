@@ -6,5 +6,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
-  sendNotification: (title, body) => ipcRenderer.send('show-notification', { title, body })
+  sendNotification: (title, body) => ipcRenderer.send('show-notification', { title, body }),
+  executeControlCommand: (message) => ipcRenderer.invoke('execute-control-command', { message })
 });

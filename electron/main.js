@@ -80,6 +80,37 @@ ipcMain.on('show-notification', (event, { title, body }) => {
   }
 });
 
+// Computer Control IPC Handler
+const { spawn } = require('child_process');
+ipcMain.handle('execute-control-command', async (event, { message }) => {
+  return new Promise((resolve) => {
+    const pythonExe = process.platform === 'win32' ? 'python' : 'python3';
+    const pyCode = `
+import sys, json, os
+sys.path.insert(0, r'${path.join(__dirname, '..').replace(/\\/g, '/')}')
+from core.planner import Planner
+from controller.factory import get_controller
+plan = Planner.plan_from_text('''${message.replace(/'/g, "\\'")}''')
+ctrl = get_controller()
+results = [ctrl.execute_tool(s['tool'], s['args']) for s in plan]
+print(json.dumps({'plan': plan, 'results': results, 'platform': ctrl.platform_name}))
+`;
+    const child = spawn(pythonExe, ['-c', pyCode]);
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (d) => { stdout += d.toString(); });
+    child.stderr.on('data', (d) => { stderr += d.toString(); });
+    child.on('close', (code) => {
+      try {
+        const parsed = JSON.parse(stdout.trim());
+        resolve({ success: code === 0, ...parsed });
+      } catch (e) {
+        resolve({ success: false, error: stderr || stdout || 'Execution failed' });
+      }
+    });
+  });
+});
+
 app.whenReady().then(() => {
   createWindow();
 

@@ -23,3 +23,9 @@ yarn-error.log*
 # OS generated
 .DS_Store
 Thumbs.db
+
+# Local AI Models & Screenshots
+models/
+*.gguf
+screenshots/
+
