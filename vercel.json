@@ -1,7 +1,10 @@
 {
   "framework": null,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/speech-assist", "destination": "/speech-assist/index.html" },
+    { "source": "/speech-assist/", "destination": "/speech-assist/index.html" },
+    { "source": "/speech", "destination": "/speech-assist/index.html" }
   ],
   "headers": [
     {
