@@ -1107,9 +1107,13 @@ function getFallbackResponse(query) {
       youtube: { name: 'YouTube', icon: '▶️', url: 'https://www.youtube.com', search: 'https://www.youtube.com/results?search_query=' },
       spotify: { name: 'Spotify', icon: '🎵', url: 'https://open.spotify.com', search: 'https://open.spotify.com/search/' },
       google: { name: 'Google', icon: '🔍', url: 'https://www.google.com', search: 'https://www.google.com/search?q=' },
+      chrome: { name: 'Google Chrome', icon: '🌐', url: 'https://www.google.com', search: 'https://www.google.com/search?q=' },
       instagram: { name: 'Instagram', icon: '📸', url: 'https://www.instagram.com' },
       calculator: { name: 'Calculator', icon: '🔢', url: 'https://www.google.com/search?q=calculator' },
+      calc: { name: 'Calculator', icon: '🔢', url: 'https://www.google.com/search?q=calculator' },
       camera: { name: 'Camera', icon: '📷', url: 'https://webcamtests.com' },
+      notepad: { name: 'Notepad', icon: '📝', url: 'https://anotepad.com' },
+      paint: { name: 'MS Paint', icon: '🎨', url: 'https://jspaint.app' },
       gmail: { name: 'Gmail', icon: '✉️', url: 'https://mail.google.com' },
       email: { name: 'Email', icon: '✉️', url: 'https://mail.google.com' },
       maps: { name: 'Google Maps', icon: '🗺️', url: 'https://www.google.com/maps', search: 'https://www.google.com/maps/search/' },
@@ -1712,6 +1716,51 @@ function HousieApp() {
     setSpeech(thinkPhrases[Math.floor(Math.random() * thinkPhrases.length)]);
     setShowSpeech(true);
 
+    // 1. Native Desktop / Electron Computer Control Check
+    if (window.electronAPI && window.electronAPI.executeControlCommand) {
+      try {
+        const ctrlRes = await window.electronAPI.executeControlCommand(msg);
+        if (ctrlRes && ctrlRes.plan && ctrlRes.plan.length > 0) {
+          const planText = ctrlRes.plan.map((s, idx) => `• **Step ${idx+1}:** \`${s.tool}(${JSON.stringify(s.args)})\``).join('\n');
+          setIsTyping(false);
+          setMessages(prev => [...prev, {
+            role: 'ai',
+            text: `🖥️ **Desktop Computer Action Executed** (${(ctrlRes.platform||'OS').toUpperCase()}):\n${planText}\n\n✅ Automation executed successfully!`,
+            time: timeNow()
+          }]);
+          setSpeech('Executed! ⚡');
+          setTalking(true);
+          setTimeout(() => { setTalking(false); setShowSpeech(false); }, 2200);
+          return;
+        }
+      } catch (e) {}
+    }
+
+    // 2. Python OS Controller Localhost Bridge (localhost:5000)
+    try {
+      const localRes = await fetch('http://127.0.0.1:5000/api/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, execute: true })
+      });
+      if (localRes.ok) {
+        const ctrlData = await localRes.json();
+        if (ctrlData.plan && ctrlData.plan.length > 0) {
+          const planText = ctrlData.plan.map((s, idx) => `• **Step ${idx+1}:** \`${s.tool}(${JSON.stringify(s.args)})\``).join('\n');
+          setIsTyping(false);
+          setMessages(prev => [...prev, {
+            role: 'ai',
+            text: `🤖 **OS Control Action Executed** (${(ctrlData.platform||'Windows').toUpperCase()}):\n${planText}\n\n✅ Executed on host system!`,
+            time: timeNow()
+          }]);
+          setSpeech('Executed! ⚡');
+          setTalking(true);
+          setTimeout(() => { setTalking(false); setShowSpeech(false); }, 2200);
+          return;
+        }
+      }
+    } catch(e) {}
+
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -1812,6 +1861,16 @@ function HousieApp() {
           >
             📲 Get App
           </button>
+
+          {/* Speech Assist Button */}
+          <a
+            href="./speech-assist/index.html"
+            className="get-app-btn"
+            style={{textDecoration:'none', background:'linear-gradient(135deg,#6366f1,#4f46e5)', border:'none', color:'#fff', display:'inline-flex', alignItems:'center', gap:'4px'}}
+            title="Open SpeechAssist — AI voice assistant"
+          >
+            🎙 Speech
+          </a>
 
           {/* TTS Toggle */}
           <button

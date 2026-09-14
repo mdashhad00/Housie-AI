@@ -172,6 +172,35 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
         "name": "get_active_window",
         "description": "Returns the title and process name of the currently focused window on the device.",
         "parameters": {"type": "object", "properties": {}}
+    },
+    {
+        "name": "close_app",
+        "description": "Closes an active application or window by name or closes the active window.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the application, e.g. 'Notepad', 'Chrome', 'Calculator', or 'current'."
+                }
+            },
+            "required": ["name"]
+        }
+    },
+    {
+        "name": "system_command",
+        "description": "Performs system-level actions like volume control, mute, lock screen, or minimize windows.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["volume_up", "volume_down", "volume_mute", "lock_screen", "minimize_all", "show_desktop"],
+                    "description": "The system action to execute."
+                }
+            },
+            "required": ["action"]
+        }
     }
 ]
 

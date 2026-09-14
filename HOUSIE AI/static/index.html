@@ -4,7 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Housie AI — Your Smart AI Companion</title>
-  <meta name="description" content="Housie AI: SymPy-powered math solver with 30+ science topics, bilingual English/Hinglish support" />
+  <meta name="description" content="Housie AI: SymPy-powered math solver with 30+ science topics, bilingual English/Hinglish support. Now with Whisper.cpp voice input & TTS." />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Housie AI" />
 
   <!-- React + Babel CDN for React without Node.js -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -338,6 +343,238 @@
       opacity: 0.65; cursor: not-allowed; background: rgba(255, 255, 255, 0.03);
     }
 
+    /* ═══════════════════════════════════════════
+       VOICE INPUT — MIC BUTTON
+    ═══════════════════════════════════════════ */
+    .mic-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: none;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #e2e8f0; font-size: 18px; cursor: pointer;
+      transition: all 0.25s; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .mic-btn:hover:not(:disabled) {
+      background: rgba(99,102,241,0.25); border-color: rgba(99,102,241,0.5);
+      transform: scale(1.08);
+    }
+    .mic-btn.recording {
+      background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.6);
+      animation: micPulse 0.9s ease-in-out infinite;
+    }
+    .mic-btn.transcribing {
+      background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.5);
+      animation: micSpin 1s linear infinite;
+    }
+    @keyframes micPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+      50% { box-shadow: 0 0 0 8px rgba(239,68,68,0.35); }
+    }
+    @keyframes micSpin {
+      from { filter: hue-rotate(0deg); }
+      to { filter: hue-rotate(360deg); }
+    }
+    .mic-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Voice status badge */
+    .voice-status {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+      padding: 8px 18px; background: rgba(15,23,42,0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px; color: #f1f5f9; font-size: 12px; font-weight: 600;
+      z-index: 100; pointer-events: none;
+      animation: voiceStatusIn 0.3s ease;
+    }
+    @keyframes voiceStatusIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+    /* Whisper model loader bar */
+    .whisper-loader {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      height: 3px;
+      background: linear-gradient(90deg, #6366f1, #a78bfa, #2dd4bf);
+      transform-origin: left;
+      animation: loaderPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes loaderPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+    /* Whisper info popup */
+    .whisper-info {
+      position: fixed; bottom: 80px; right: 24px;
+      padding: 10px 16px; background: rgba(15,23,42,0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 14px; color: #94a3b8; font-size: 11px;
+      max-width: 240px; line-height: 1.5;
+      z-index: 200;
+    }
+    .whisper-info strong { color: #a5b4fc; }
+
+    /* TTS toggle button */
+    .tts-btn {
+      padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06); color: #94a3b8;
+      font-size: 13px; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .tts-btn:hover { background: rgba(45,212,191,0.12); border-color: rgba(45,212,191,0.3); color: #2dd4bf; }
+    .tts-btn.active { background: rgba(45,212,191,0.15); border-color: rgba(45,212,191,0.4); color: #2dd4bf; }
+
+    /* Model selector */
+    .model-select {
+      background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; color: #94a3b8; font-size: 11px; padding: 3px 6px;
+      cursor: pointer; outline: none;
+    }
+    .model-select:focus { border-color: rgba(99,102,241,0.4); }
+
+    /* Device control result card */
+    .device-card {
+      margin-top: 10px; padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(15,23,42,0.8), rgba(30,41,59,0.7));
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 14px; display: flex; flex-direction: column; gap: 8px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.2);
+    }
+    .device-card-row { display: flex; align-items: center; gap: 10px; }
+    .device-card-icon {
+      font-size: 22px; width: 40px; height: 40px; border-radius: 12px;
+      background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.25);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .device-card-label { font-size: 13px; font-weight: 700; color: #f1f5f9; }
+    .device-card-value { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+    .device-card-btn {
+      padding: 8px 16px; border: none; border-radius: 10px; cursor: pointer;
+      font-size: 12px; font-weight: 600; color: #fff;
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
+      transition: all 0.2s; box-shadow: 0 3px 10px rgba(99,102,241,0.3);
+    }
+    .device-card-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 16px rgba(99,102,241,0.5); }
+    .device-card-btn.green { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 3px 10px rgba(34,197,94,0.3); }
+    .device-card-btn.red { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 3px 10px rgba(239,68,68,0.3); }
+    .device-card-btn.teal { background: linear-gradient(135deg, #2dd4bf, #0d9488); box-shadow: 0 3px 10px rgba(45,212,191,0.3); }
+
+    /* App Download Card */
+    .download-card {
+      margin-top: 12px; padding: 18px;
+      background: linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.85));
+      border: 1px solid rgba(167,139,250,0.3);
+      border-radius: 18px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .download-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;
+    }
+    .download-card-title {
+      display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: #f8fafc;
+    }
+    .download-version-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+      background: rgba(45,212,191,0.15); border: 1px solid rgba(45,212,191,0.35); color: #2dd4bf;
+    }
+    .download-os-banner {
+      font-size: 11px; color: #a5b4fc; background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(99,102,241,0.25); border-radius: 8px; padding: 6px 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .platform-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .platform-card {
+      padding: 12px; border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex; flex-direction: column; gap: 8px;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .platform-card:hover {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(167,139,250,0.4);
+      transform: translateY(-2px);
+    }
+    .platform-card.recommended {
+      background: linear-gradient(135deg, rgba(99,102,241,0.18), rgba(45,212,191,0.12));
+      border-color: rgba(45,212,191,0.5);
+      box-shadow: 0 0 16px rgba(45,212,191,0.18);
+    }
+    .recommended-pill {
+      position: absolute; top: -7px; right: 10px;
+      background: linear-gradient(135deg, #6366f1, #2dd4bf);
+      color: #fff; font-size: 9px; font-weight: 800; padding: 1px 7px;
+      border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .platform-head {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .platform-icon {
+      font-size: 22px; width: 34px; height: 34px; border-radius: 10px;
+      background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center;
+    }
+    .platform-name {
+      font-size: 13px; font-weight: 700; color: #f1f5f9; display: flex; align-items: center; gap: 6px;
+    }
+    .platform-ext {
+      font-size: 10px; color: #94a3b8; background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 4px;
+    }
+    .platform-desc {
+      font-size: 10px; color: #94a3b8; line-height: 1.3;
+    }
+    .platform-btn {
+      padding: 7px 12px; border-radius: 8px; border: none; cursor: pointer;
+      font-size: 11px; font-weight: 700; text-decoration: none; text-align: center;
+      background: linear-gradient(135deg, #6366f1, #a78bfa); color: #fff;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.2s;
+    }
+    .platform-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+    }
+    .platform-btn.alt {
+      background: rgba(45,212,191,0.15); border: 1px solid rgba(45,212,191,0.4); color: #2dd4bf;
+    }
+    .platform-btn.alt:hover {
+      background: rgba(45,212,191,0.25);
+    }
+    .download-card-footer {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);
+      font-size: 11px;
+    }
+    .download-github-link {
+      color: #94a3b8; text-decoration: none; transition: color 0.2s;
+    }
+    .download-github-link:hover { color: #2dd4bf; }
+    .copy-link-btn {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px; padding: 4px 10px; font-size: 10px; color: #cbd5e1;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .copy-link-btn:hover {
+      background: rgba(255,255,255,0.12); color: #fff;
+    }
+
+    /* Top bar Get App button */
+    .get-app-btn {
+      padding: 4px 12px; border-radius: 12px;
+      background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(45,212,191,0.2));
+      border: 1px solid rgba(45,212,191,0.4);
+      color: #2dd4bf; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .get-app-btn:hover {
+      background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(45,212,191,0.35));
+      border-color: #2dd4bf;
+      transform: scale(1.04);
+      box-shadow: 0 0 12px rgba(45,212,191,0.3);
+    }
+
     /* Mobile */
     @media (max-width: 768px) {
       #root { flex-direction: column; gap: 10px; padding: 10px; }
@@ -441,16 +678,319 @@ function timeNow() {
   return new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 }
 
+// ─── Device Command Executor ───
+async function executeDeviceCmd(action, setMessages) {
+  const { deviceCmd, copyText, notifyMsg, shareText, url } = action;
+  const t = timeNow();
+
+  if (deviceCmd === 'copy') {
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setMessages(p => [...p, { role:'ai', text:`✅ **Copied!** "${copyText}" is now in your clipboard. Press **Ctrl+V** to paste anywhere!`, time: t }]);
+    } catch { setMessages(p => [...p, { role:'ai', text:`❌ Clipboard access denied. Please allow clipboard permission and try again.`, time: t }]); }
+  }
+
+  else if (deviceCmd === 'notify') {
+    if (!('Notification' in window)) {
+      setMessages(p => [...p, { role:'ai', text:`❌ This browser doesn't support notifications.`, time: t }]);
+    } else if (Notification.permission === 'granted') {
+      new Notification('Housie AI 🧠', { body: notifyMsg, icon: '/minecraft_bg.png' });
+      setMessages(p => [...p, { role:'ai', text:`✅ Notification sent: **"${notifyMsg}"**`, time: t }]);
+    } else {
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') {
+        new Notification('Housie AI 🧠', { body: notifyMsg, icon: '/minecraft_bg.png' });
+        setMessages(p => [...p, { role:'ai', text:`✅ Notification sent: **"${notifyMsg}"**`, time: t }]);
+      } else {
+        setMessages(p => [...p, { role:'ai', text:`❌ Notification permission denied. Please allow notifications in your browser settings.`, time: t }]);
+      }
+    }
+  }
+
+  else if (deviceCmd === 'vibrate') {
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200, 100, 400]);
+      setMessages(p => [...p, { role:'ai', text:`📳 Device vibrated! ✅ (pattern: 200ms-pause-200ms-pause-400ms)`, time: t }]);
+    } else {
+      setMessages(p => [...p, { role:'ai', text:`❌ Vibration not supported on this device/browser. Works on Android phones in Chrome!`, time: t }]);
+    }
+  }
+
+  else if (deviceCmd === 'battery') {
+    try {
+      const bat = await navigator.getBattery();
+      const pct = Math.round(bat.level * 100);
+      const charging = bat.charging ? '⚡ Charging' : '🔌 Not charging';
+      const eta = bat.charging && bat.chargingTime !== Infinity
+        ? ` • Full in ~${Math.round(bat.chargingTime/60)}min`
+        : (!bat.charging && bat.dischargingTime !== Infinity)
+        ? ` • ~${Math.round(bat.dischargingTime/60)}min left`
+        : '';
+      setMessages(p => [...p, { role:'ai', text:`🔋 **Battery: ${pct}%**\n${charging}${eta}\n\n${pct > 70 ? '✅ Battery is good!' : pct > 30 ? '⚠️ Battery getting low.' : '🛑 Plug in now!'}`, time: t }]);
+    } catch {
+      setMessages(p => [...p, { role:'ai', text:`❌ Battery API not available on this device/browser. Works on Android Chrome!`, time: t }]);
+    }
+  }
+
+  else if (deviceCmd === 'location') {
+    setMessages(p => [...p, { role:'ai', text:`📍 Getting your location... (please allow location permission)`, time: t }]);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude: lat, longitude: lng, accuracy: acc } = pos.coords;
+        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+        setMessages(p => [...p, {
+          role:'ai',
+          text: `📍 **Your Location:**\nLat: **${lat.toFixed(5)}** | Lng: **${lng.toFixed(5)}**\nAccuracy: ±${Math.round(acc)}m`,
+          action: { type:'open_app', app:'Google Maps', icon:'🗺️', url: mapsUrl, label:'🗺️ Open in Maps' },
+          time: t
+        }]);
+      },
+      err => setMessages(p => [...p, { role:'ai', text:`❌ Location denied or unavailable: ${err.message}`, time: t }]),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  else if (deviceCmd === 'wakelock') {
+    try {
+      if ('wakeLock' in navigator) {
+        await navigator.wakeLock.request('screen');
+        setMessages(p => [...p, { role:'ai', text:`💡 **Screen Wake Lock active!** Your screen won't sleep as long as this tab is open. ✅`, time: t }]);
+      } else {
+        setMessages(p => [...p, { role:'ai', text:`❌ Wake Lock API not supported on this browser. Try Chrome on Android/Desktop!`, time: t }]);
+      }
+    } catch(e) {
+      setMessages(p => [...p, { role:'ai', text:`❌ Wake Lock failed: ${e.message}`, time: t }]);
+    }
+  }
+
+  else if (deviceCmd === 'share') {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Housie AI', text: shareText, url: window.location.href });
+        setMessages(p => [...p, { role:'ai', text:`✅ Content shared successfully!`, time: t }]);
+      } catch(e) {
+        if (e.name !== 'AbortError') setMessages(p => [...p, { role:'ai', text:`❌ Share failed: ${e.message}`, time: t }]);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareText);
+        setMessages(p => [...p, { role:'ai', text:`📋 Web Share not available \u2014 copied to clipboard instead: **"${shareText}"**`, time: t }]);
+      } catch { setMessages(p => [...p, { role:'ai', text:`❌ Share not supported on this browser.`, time: t }]); }
+    }
+  }
+
+  else if (deviceCmd === 'call' && url) {
+    window.location.href = url;
+  }
+
+  else if (deviceCmd === 'email' && url) {
+    window.location.href = url;
+  }
+
+  else if (deviceCmd === 'camera' && url) {
+    window.open(url, '_blank');
+  }
+}
+
+// ─── Device Action Card Component ───
+function DeviceActionCard({ action, setMessages }) {
+  const [done, setDone] = useState(false);
+  const handleClick = async () => {
+    setDone(true);
+    await executeDeviceCmd(action, setMessages);
+  };
+  return (
+    <div className="device-card">
+      <div className="device-card-row">
+        <div className="device-card-icon">{action.icon}</div>
+        <div>
+          <div className="device-card-label">{action.app}</div>
+          <div className="device-card-value">{action.label}</div>
+        </div>
+      </div>
+      <button
+        className={`device-card-btn ${done ? 'teal' : ''}`}
+        onClick={handleClick}
+        disabled={done && !['location','battery','wakelock'].includes(action.deviceCmd)}
+      >
+        {done ? '✅ Done!' : action.label}
+      </button>
+    </div>
+  );
+}
+
+// ─── OS Detection Helper ───
+function detectUserOS() {
+  const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+  if (/android/i.test(ua)) return 'android';
+  if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+  if (/macintosh|mac os x/i.test(ua)) return 'mac';
+  if (/windows|win32|win64/i.test(ua)) return 'windows';
+  if (/linux/i.test(ua)) return 'linux';
+  return 'windows';
+}
+
+// ─── Download Action Card Component ───
+function DownloadActionCard({ action }) {
+  const [copied, setCopied] = useState(false);
+  const [pwaInstalled, setPwaInstalled] = useState(false);
+  const userOS = action.detectedOS || detectUserOS();
+
+  const handleInstallPwa = async () => {
+    if (window.deferredInstallPrompt) {
+      window.deferredInstallPrompt.prompt();
+      const { outcome } = await window.deferredInstallPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setPwaInstalled(true);
+      }
+      window.deferredInstallPrompt = null;
+    } else {
+      alert('📲 On Android / Chrome: Tap browser menu (⋮) and choose "Install App" or "Add to Home Screen" to install Housie AI!');
+    }
+  };
+
+  const handleCopyLink = () => {
+    const link = 'https://github.com/mdashhad00/Housie-AI/releases';
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const platforms = [
+    {
+      id: 'windows',
+      name: 'Windows',
+      icon: '🪟',
+      ext: '.exe',
+      desc: 'Windows 10 / 11 (64-bit Installer)',
+      url: 'https://github.com/mdashhad00/Housie-AI/releases/latest/download/Housie-AI-Setup.exe',
+      fallbackUrl: 'https://github.com/mdashhad00/Housie-AI/releases'
+    },
+    {
+      id: 'mac',
+      name: 'macOS',
+      icon: '🍎',
+      ext: '.dmg',
+      desc: 'Apple Silicon (M1/M2/M3) & Intel',
+      url: 'https://github.com/mdashhad00/Housie-AI/releases/latest/download/Housie-AI.dmg',
+      fallbackUrl: 'https://github.com/mdashhad00/Housie-AI/releases'
+    },
+    {
+      id: 'linux',
+      name: 'Linux',
+      icon: '🐧',
+      ext: '.AppImage',
+      desc: 'Ubuntu, Debian, Fedora, Arch',
+      url: 'https://github.com/mdashhad00/Housie-AI/releases/latest/download/Housie-AI.AppImage',
+      fallbackUrl: 'https://github.com/mdashhad00/Housie-AI/releases'
+    },
+    {
+      id: 'android',
+      name: 'Android',
+      icon: '🤖',
+      ext: '.apk / PWA',
+      desc: 'Direct APK + Instant 1-Tap Install',
+      url: 'https://github.com/mdashhad00/Housie-AI/releases/latest/download/Housie-AI.apk',
+      fallbackUrl: 'https://github.com/mdashhad00/Housie-AI/releases',
+      isAndroid: true
+    }
+  ];
+
+  const osLabels = {
+    windows: 'Windows',
+    mac: 'macOS',
+    linux: 'Linux',
+    android: 'Android'
+  };
+
+  return (
+    <div className="download-card">
+      <div className="download-card-header">
+        <div className="download-card-title">
+          <span>📲</span>
+          <span>Download Housie AI App</span>
+        </div>
+        <span className="download-version-badge">v2.0 Native</span>
+      </div>
+
+      <div className="download-os-banner">
+        <span>✨</span>
+        <span>Detected your device: <strong>{osLabels[userOS] || 'Desktop'}</strong> — Best version highlighted!</span>
+      </div>
+
+      <div className="platform-grid">
+        {platforms.map(p => {
+          const isRec = userOS === p.id;
+          return (
+            <div key={p.id} className={`platform-card ${isRec ? 'recommended' : ''}`}>
+              {isRec && <div className="recommended-pill">⭐ Recommended</div>}
+              <div className="platform-head">
+                <div className="platform-icon">{p.icon}</div>
+                <div>
+                  <div className="platform-name">
+                    {p.name} <span className="platform-ext">{p.ext}</span>
+                  </div>
+                  <div className="platform-desc">{p.desc}</div>
+                </div>
+              </div>
+
+              <a
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="platform-btn"
+                onClick={() => {
+                  setTimeout(() => { window.open(p.fallbackUrl, '_blank'); }, 2000);
+                }}
+              >
+                ⬇️ Download {p.ext.split(' ')[0]}
+              </a>
+
+              {p.isAndroid && (
+                <button
+                  className="platform-btn alt"
+                  onClick={handleInstallPwa}
+                >
+                  {pwaInstalled ? '✅ App Installed!' : '📲 1-Tap Install on Phone'}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="download-card-footer">
+        <button className="copy-link-btn" onClick={handleCopyLink}>
+          {copied ? '✅ Link Copied!' : '📋 Copy Download Link'}
+        </button>
+        <a
+          href="https://github.com/mdashhad00/Housie-AI/releases"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="download-github-link"
+        >
+          View all releases on GitHub ↗
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // ─── Suggested Chips ───
 const CHIPS = [
+  "📲 download the app (Windows / Mac / Linux / Android)",
   "💬 text on whatsapp to 9876543210: hey bro",
   "▶️ open youtube and search lofi beats",
   "🎵 open spotify and play coldplay",
+  "📋 copy Hello World to clipboard",
+  "🔋 check my battery",
+  "📍 where am I",
+  "📞 call 9876543210",
+  "🔔 notify me: Time to study!",
   "derivative of x^3 + 2x",
-  "solve x^2 - 5x + 6 = 0",
   "🔢 open calculator",
-  "📸 open instagram",
-  "tell me a joke 😂",
 ];
 
 // ─── Client Fallback Engine (Zero Downtime) ───
@@ -459,6 +999,36 @@ function getFallbackResponse(query) {
   const cleanText = raw.replace(/^[^\w\s]+/g, '').trim();
   const text = (cleanText || raw).toLowerCase();
   const isHinglish = /kya|hai|bhai|yaar|kaise|kaisa|kuch|nahi|haan|kaun|kisne|banaya|sunao|bol/.test(text);
+
+  // 0. App Download Commands (Windows, Mac, Linux, Android)
+  const isAppDownload = (
+    /\b(?:download|install|get|give|create)\b.*\b(?:app|application|apk|setup|exe|dmg|software)\b/i.test(text) ||
+    /\b(?:app|application|apk)\b.*\b(?:download|link|links|install|get)\b/i.test(text) ||
+    /\b(?:windows|mac|macos|linux|android)\s*(?:app|version|apk|setup|installer|download)\b/i.test(text) ||
+    /\b(?:app|download|install|apk)\b$/i.test(cleanText) ||
+    /(?:app\s*(?:chahiye|kaise\s*download|kaha\s*se|ka\s*link|download\s*karna|bhejo|dedo))/i.test(text) ||
+    /(?:is\s*there\s*an\s*app|do\s*you\s*have\s*an\s*app|provide\s*(?:the\s*)?download\s*link)/i.test(text)
+  );
+
+  if (isAppDownload) {
+    const userOS = detectUserOS();
+    const osNames = { windows: 'Windows', mac: 'macOS', linux: 'Linux', android: 'Android' };
+    const deviceName = osNames[userOS] || 'your device';
+
+    const resp = isHinglish
+      ? `📲 **Housie AI sabhi platforms par available hai!**\n\nNeeche diye gaye download card se aap **Windows, macOS, Linux, aur Android** ke liye direct download kar sakte hain!\n\nAapke device (**${deviceName}**) ke liye best version highlight kar diya hai! 🚀`
+      : `📲 **Housie AI is available across all platforms!**\n\nChoose your platform below to download Housie AI for **Windows, macOS, Linux, or Android**.\n\nWe have automatically highlighted the recommended version for your **${deviceName}**! 🚀`;
+
+    return {
+      response: resp,
+      action: {
+        type: 'download_app',
+        detectedOS: userOS,
+        releaseUrl: 'https://github.com/mdashhad00/Housie-AI/releases'
+      },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
 
   // 0. WhatsApp Commands
   if (/\b(?:whatsapp|wa)\b/i.test(text)) {
@@ -485,8 +1055,8 @@ function getFallbackResponse(query) {
       waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(msgContent)}`;
       preview = msgContent;
       resp = isHinglish
-        ? `💬 **+${phone}** ke liye WhatsApp text ready hai!\n\n**Message:** "${msgContent}"\n\nWhatsApp launch kar raha hoon... 🚀`
-        : `💬 Ready to text **+${phone}** on WhatsApp!\n\n**Message:** "${msgContent}"\n\nOpening WhatsApp now... 🚀`;
+        ? `💬 **+${phone}** ke liye message ready hai!\n\n**Message:** "${msgContent}"\n\n✅ Button dabao — WhatsApp mein message already filled hoga, bas **Send** press karo!`
+        : `💬 Message ready for **+${phone}**!\n\n**Message:** "${msgContent}"\n\n✅ Click the button — WhatsApp opens with message pre-filled, just press **Send**!`;
     } else if (phone && !msgContent) {
       waUrl = `https://wa.me/${phone}`;
       preview = `Chat with +${phone}`;
@@ -498,7 +1068,7 @@ function getFallbackResponse(query) {
       preview = msgContent;
       resp = isHinglish
         ? `💬 WhatsApp message ready hai!\n\n**Message:** "${msgContent}"\n\nWhatsApp open ho raha hai, contact choose karo aur bhej do! 🚀`
-        : `💬 Prepared your WhatsApp message!\n\n**Message:** "${msgContent}"\n\nOpening WhatsApp so you can choose a recipient! 🚀`;
+        : `💬 Prepared your WhatsApp message!\n\n**Message:** "${msgContent}"\n\nOpening WhatsApp — choose a recipient and hit Send! 🚀`;
     }
 
     return {
@@ -510,7 +1080,7 @@ function getFallbackResponse(query) {
         url: waUrl,
         phone: phone,
         previewText: preview,
-        label: '🚀 Open WhatsApp & Send'
+        label: phone && msgContent ? '💬 Open WhatsApp (message pre-filled)' : '🚀 Open WhatsApp'
       },
       language: isHinglish ? 'hinglish' : 'english'
     };
@@ -537,9 +1107,13 @@ function getFallbackResponse(query) {
       youtube: { name: 'YouTube', icon: '▶️', url: 'https://www.youtube.com', search: 'https://www.youtube.com/results?search_query=' },
       spotify: { name: 'Spotify', icon: '🎵', url: 'https://open.spotify.com', search: 'https://open.spotify.com/search/' },
       google: { name: 'Google', icon: '🔍', url: 'https://www.google.com', search: 'https://www.google.com/search?q=' },
+      chrome: { name: 'Google Chrome', icon: '🌐', url: 'https://www.google.com', search: 'https://www.google.com/search?q=' },
       instagram: { name: 'Instagram', icon: '📸', url: 'https://www.instagram.com' },
       calculator: { name: 'Calculator', icon: '🔢', url: 'https://www.google.com/search?q=calculator' },
+      calc: { name: 'Calculator', icon: '🔢', url: 'https://www.google.com/search?q=calculator' },
       camera: { name: 'Camera', icon: '📷', url: 'https://webcamtests.com' },
+      notepad: { name: 'Notepad', icon: '📝', url: 'https://anotepad.com' },
+      paint: { name: 'MS Paint', icon: '🎨', url: 'https://jspaint.app' },
       gmail: { name: 'Gmail', icon: '✉️', url: 'https://mail.google.com' },
       email: { name: 'Email', icon: '✉️', url: 'https://mail.google.com' },
       maps: { name: 'Google Maps', icon: '🗺️', url: 'https://www.google.com/maps', search: 'https://www.google.com/maps/search/' },
@@ -590,6 +1164,167 @@ function getFallbackResponse(query) {
         query: appQuery,
         label: label
       },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // 1. Device Control Commands
+  // --- Phone Call ---
+  const callMatch = text.match(/(?:call|phone|dial|ring)\s+(?:on\s+)?(?:number\s+)?(\+?\d[\d\s\-]{6,})/i)
+    || query.match(/(?:call|phone|dial|ring)\s+(?:number\s+)?(\+?\d[\d\s\-]{6,})/i);
+  if (callMatch) {
+    const num = callMatch[1].replace(/\s/g,'');
+    return {
+      response: isHinglish ? `📞 **${num}** pe call kar raha hoon!` : `📞 Calling **${num}** now!`,
+      action: { type: 'device', deviceCmd: 'call', icon: '📞', app: 'Phone', label: `📞 Call ${num}`, url: `tel:${num}` },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Email / Mail ---
+  const emailMatch = text.match(/(?:email|mail|send mail)\s+(?:to\s+)?([\w.+]+@[\w.]+)(?:[:\s]+(.+))?/i)
+    || text.match(/(?:email|mail)\s+([\w.+]+@[\w.]+)/i);
+  if (emailMatch) {
+    const addr = emailMatch[1];
+    const subj = emailMatch[2] ? encodeURIComponent(emailMatch[2]) : '';
+    return {
+      response: isHinglish ? `✉️ **${addr}** ko email compose ho raha hai!` : `✉️ Composing email to **${addr}**!`,
+      action: { type: 'device', deviceCmd: 'email', icon: '✉️', app: 'Email', label: `✉️ Open Email`, url: `mailto:${addr}${subj ? '?subject='+subj : ''}` },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Clipboard copy ---
+  const copyMatch = text.match(/(?:copy|clipboard)\s+(?:karo\s+)?(.+?)(?:\s+(?:to clipboard|copy karo|clipboard pe))?$/i);
+  if (copyMatch && /\b(?:copy|clipboard)\b/i.test(text)) {
+    const copyText = copyMatch[1].trim();
+    return {
+      response: isHinglish ? `📋 "${copyText}" clipboard pe copy ho gaya! ✅` : `📋 Copied "${copyText}" to clipboard! ✅`,
+      action: { type: 'device', deviceCmd: 'copy', icon: '📋', app: 'Clipboard', label: '📋 Copy to Clipboard', copyText },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Browser Notification ---
+  const notifyMatch = text.match(/(?:notify|notification|alert|remind)\s+(?:me\s+)?(?:that\s+|with\s+)?[:"]?(.+)/i);
+  if (notifyMatch && /\b(?:notify|notification|alert|remind)\b/i.test(text)) {
+    const msg = notifyMatch[1].replace(/^[:\-"'\s]+|["'\s]+$/g,'').trim();
+    return {
+      response: isHinglish ? `🔔 Notification send kar raha hoon: "${msg}"` : `🔔 Sending notification: "${msg}"`,
+      action: { type: 'device', deviceCmd: 'notify', icon: '🔔', app: 'Notifications', label: '🔔 Send Notification', notifyMsg: msg },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Vibrate ---
+  if (/\b(?:vibrate|vibration|buzz)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `📳 Device vibrate kar raha hai! ✅` : `📳 Vibrating your device! ✅`,
+      action: { type: 'device', deviceCmd: 'vibrate', icon: '📳', app: 'Vibration', label: '📳 Vibrate Device' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Battery Status ---
+  if (/\b(?:battery|charge|charging)\b/i.test(text) && /\b(?:check|status|level|kitna|how much|dekho|batao)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `🔋 Battery check kar raha hoon...` : `🔋 Checking battery status...`,
+      action: { type: 'device', deviceCmd: 'battery', icon: '🔋', app: 'Battery', label: '🔋 Check Battery' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Location ---
+  if (/\b(?:location|where am i|my location|gps|kahan hoon|coordinates|latitude|longitude)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `📍 Aapka location dhundh raha hoon...` : `📍 Getting your location...`,
+      action: { type: 'device', deviceCmd: 'location', icon: '📍', app: 'Location', label: '📍 Get My Location' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Wake Lock / Screen On ---
+  if (/\b(?:keep screen on|screen on rakho|wake lock|dont sleep|don't sleep|screen off mat karo)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `💡 Screen on rakhega — sleep nahi karega! ✅` : `💡 Keeping screen awake — won't sleep! ✅`,
+      action: { type: 'device', deviceCmd: 'wakelock', icon: '💡', app: 'Screen', label: '💡 Keep Screen On' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Open Camera ---
+  if (/\b(?:open camera|camera open|take photo|take picture|selfie|camera chalao|photo lo)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `📷 Camera open kar raha hoon!` : `📷 Opening camera!`,
+      action: { type: 'device', deviceCmd: 'camera', icon: '📷', app: 'Camera', label: '📷 Open Camera', url: 'https://webcamtests.com' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Share ---
+  const shareMatch = text.match(/(?:share|forward)\s+(?:this\s+|karo\s+)?(.+)/i);
+  if (shareMatch && /\b(?:share|forward)\b/i.test(text)) {
+    const shareText = shareMatch[1].trim();
+    return {
+      response: isHinglish ? `🔗 "${shareText}" share kar raha hoon!` : `🔗 Sharing "${shareText}"!`,
+      action: { type: 'device', deviceCmd: 'share', icon: '🔗', app: 'Share', label: '🔗 Share Now', shareText },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Screenshot ---
+  if (/\b(?:screenshot|screen capture|screen shot|screencap)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `📸 Screenshot ke liye browser shortcut use karo:\n• **Windows:** Win + Shift + S\n• **Mac:** Cmd + Shift + 4\n• **Android:** Power + Volume Down\n• **iPhone:** Side + Volume Up` : `📸 To take a screenshot:\n• **Windows:** Win + Shift + S\n• **Mac:** Cmd + Shift + 4\n• **Android:** Power + Volume Down\n• **iPhone:** Side + Volume Up`,
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Volume (informational - browser cant control system volume) ---
+  if (/\b(?:volume|sound|audio)\s+(?:up|down|increase|decrease|loud|low|mute|unmute|badho|kam karo)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `🔊 Volume ke liye apne **keyboard ke volume keys** use karo (🔊/🔇 ya Fn+F11/F12).\n\nBrowser se system volume directly control nahi ho sakta!` : `🔊 Use your **keyboard volume keys** (🔊/🔇 or Fn+F11/F12) to adjust volume.\n\nBrowsers can't control system volume directly for security reasons!`,
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Network / WiFi Info ---
+  if (/\b(?:wifi|internet|network|connection|speed|bandwidth)\s+(?:check|status|info|speed|test|kitna)\b/i.test(text)) {
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const netInfo = conn ? `Type: ${conn.effectiveType || 'unknown'} | Downlink: ${conn.downlink || '?'}Mbps` : 'Network info not available';
+    return {
+      response: isHinglish ? `📶 **Network Info:**\n${netInfo}\n\nSpeed test ke liye fast.com open karo!` : `📶 **Network Info:**\n${netInfo}\n\nFor speed test, open fast.com!`,
+      action: { type: 'open_app', app: 'Fast.com Speed Test', icon: '📶', url: 'https://fast.com', label: '📶 Speed Test' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Alarm / Clock ---
+  if (/\b(?:alarm|set alarm|clock|timer|stopwatch)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `⏰ Clock/Alarm open kar raha hoon!` : `⏰ Opening Clock/Alarm!`,
+      action: { type: 'open_app', app: 'Google Clock', icon: '⏰', url: 'https://www.google.com/search?q=set+alarm', label: '⏰ Open Clock' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Weather ---
+  if (/\b(?:weather|temperature|aaj ka mausam|mausam|forecast|rain|sunny|hot|cold)\b/i.test(text)) {
+    return {
+      response: isHinglish ? `🌤️ Weather dekh raha hoon!` : `🌤️ Checking weather for you!`,
+      action: { type: 'open_app', app: 'Weather', icon: '🌤️', url: 'https://www.google.com/search?q=weather+today', label: '🌤️ Check Weather' },
+      language: isHinglish ? 'hinglish' : 'english'
+    };
+  }
+
+  // --- Translate ---
+  const translateMatch = text.match(/(?:translate|translation)\s+(.+?)\s+(?:to|in|into)\s+(\w+)/i);
+  if (translateMatch) {
+    const phrase = encodeURIComponent(translateMatch[1]);
+    const lang = encodeURIComponent(translateMatch[2]);
+    return {
+      response: isHinglish ? `🌐 Translate kar raha hoon!` : `🌐 Translating for you!`,
+      action: { type: 'open_app', app: 'Google Translate', icon: '🌐', url: `https://translate.google.com/?text=${phrase}&tl=${lang}`, label: '🌐 Open Translator' },
       language: isHinglish ? 'hinglish' : 'english'
     };
   }
@@ -664,6 +1399,104 @@ function getFallbackResponse(query) {
   };
 }
 
+// ─── Whisper WASM STT Engine ───
+let whisperCtx = null;
+let whisperLoadingPromise = null;
+const WHISPER_MODELS = {
+  'tiny.en': { name: 'tiny.en (75MB, English)', url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin', size: '75MB' },
+  'base':    { name: 'base (142MB, Multilingual)', url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin', size: '142MB' }
+};
+
+async function loadWhisperModel(modelKey, onProgress) {
+  if (whisperCtx) return whisperCtx;
+  if (whisperLoadingPromise) return whisperLoadingPromise;
+
+  const modelInfo = WHISPER_MODELS[modelKey] || WHISPER_MODELS['tiny.en'];
+  const cacheKey = 'whisper_model_' + modelKey;
+
+  whisperLoadingPromise = (async () => {
+    try {
+      // Check if Module (Whisper WASM) is loaded
+      if (typeof Module === 'undefined' || !Module.init) {
+        throw new Error('Whisper WASM not loaded');
+      }
+
+      // Try IndexedDB cache first
+      let modelData = null;
+      try {
+        const db = await new Promise((res, rej) => {
+          const r = indexedDB.open('WhisperCache', 1);
+          r.onupgradeneeded = () => r.result.createObjectStore('models');
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
+        });
+        const tx = db.transaction('models', 'readonly');
+        const cached = await new Promise((res, rej) => {
+          const r = tx.objectStore('models').get(cacheKey);
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
+        });
+        if (cached) { modelData = cached; }
+      } catch (e) {}
+
+      // Download if not cached
+      if (!modelData) {
+        onProgress && onProgress({ phase: 'downloading', pct: 0 });
+        const resp = await fetch(modelInfo.url);
+        const reader = resp.body.getReader();
+        const total = parseInt(resp.headers.get('Content-Length') || '0', 10);
+        let received = 0;
+        const chunks = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+          if (total) onProgress && onProgress({ phase: 'downloading', pct: Math.round(received / total * 90) });
+        }
+        modelData = new Uint8Array(received);
+        let offset = 0;
+        for (const chunk of chunks) { modelData.set(chunk, offset); offset += chunk.length; }
+        onProgress && onProgress({ phase: 'caching', pct: 95 });
+        // Save to IndexedDB
+        try {
+          const db2 = await new Promise((res, rej) => {
+            const r = indexedDB.open('WhisperCache', 1);
+            r.onupgradeneeded = () => r.result.createObjectStore('models');
+            r.onsuccess = () => res(r.result);
+            r.onerror = () => rej(r.error);
+          });
+          const tx2 = db2.transaction('models', 'readwrite');
+          tx2.objectStore('models').put(modelData, cacheKey);
+          await new Promise((res, rej) => { tx2.oncomplete = res; tx2.onerror = rej; });
+        } catch (e) {}
+      }
+
+      onProgress && onProgress({ phase: 'loading', pct: 98 });
+      await Module.init('ggml-tiny.en', modelData);
+      whisperCtx = Module;
+      onProgress && onProgress({ phase: 'ready', pct: 100 });
+      return whisperCtx;
+    } catch (err) {
+      whisperLoadingPromise = null;
+      throw err;
+    }
+  })();
+
+  return whisperLoadingPromise;
+}
+
+async function transcribeAudioBuffer(float32Data, modelKey, onProgress) {
+  try {
+    await loadWhisperModel(modelKey, onProgress);
+    if (!whisperCtx || !whisperCtx.full) throw new Error('Whisper not ready');
+    const result = await whisperCtx.full({ audio: float32Data, language: modelKey === 'base' ? 'auto' : 'en', translate: false, beam_size: 5 });
+    return result && result.result ? result.result.map(s => s.text).join(' ').trim() : '';
+  } catch (err) {
+    return null; // signals fallback to Web Speech API
+  }
+}
+
 // ─── Main App Component ───
 function HousieApp() {
   const [messages, setMessages] = useState([]);
@@ -674,6 +1507,18 @@ function HousieApp() {
   const [showSpeech, setShowSpeech] = useState(false);
   const [langMode, setLangMode] = useState('🌐 English');
   const [cooldown, setCooldown] = useState(0);
+
+  // ── Voice I/O State ──
+  const [isRecording, setIsRecording] = useState(false);
+  const [voiceState, setVoiceState] = useState('idle'); // idle | recording | transcribing
+  const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [whisperModel, setWhisperModel] = useState('tiny.en');
+  const [whisperStatus, setWhisperStatus] = useState('idle'); // idle | loading | ready | error
+  const [whisperPct, setWhisperPct] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recognitionRef = useRef(null);
+
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -690,6 +1535,145 @@ function HousieApp() {
     }, 1000);
     return () => clearInterval(timer);
   }, [cooldown]);
+
+  // ── TTS: speak AI responses ──
+  const speakText = React.useCallback((text) => {
+    if (!ttsEnabled || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const clean = text
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/#+\s*/g, '')
+      .replace(/🚀|🧠|💬|⚡|🎵|▶️|😊|🤔|😂|🔥|✅|🛑|⏳|📐|🎯|🌐|🇮🇳|👤|📸|🔢|📷|✉️|🗺️|🐙|🤖|🍿|📦|🛍️|🐦|🎮|✈️|👽|📝|🖌️|🎨|📱|🔍|💡|🌟|⚛️|🍝|🐛|🔬|🦠|🧬|🫀|📡|⚙️|🏋️|💊|🧪|🔭|🌍|👁️|📚|🎓/gu, '')
+      .replace(/\n/g, '. ')
+      .slice(0, 300);
+    if (!clean.trim()) return;
+    const utt = new SpeechSynthesisUtterance(clean);
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v =>
+      v.name.toLowerCase().includes('india') ||
+      v.name.toLowerCase().includes('ravi') ||
+      v.name.toLowerCase().includes('english (india)') ||
+      v.lang === 'en-IN'
+    ) || voices.find(v => v.lang === 'en-US') || voices[0];
+    if (preferred) utt.voice = preferred;
+    utt.rate = 0.95;
+    utt.pitch = 1.05;
+    window.speechSynthesis.speak(utt);
+  }, [ttsEnabled]);
+
+  // ── Voice Recording & STT ──
+  const startRecording = React.useCallback(async () => {
+    if (isRecording || isTyping) return;
+    setIsRecording(true);
+    setVoiceState('recording');
+
+    // --- Path A: Web Speech API (Chrome/Edge/Safari — no download, instant) ---
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRec) {
+      try {
+        const rec = new SpeechRec();
+        recognitionRef.current = rec;
+        rec.continuous = false;
+        rec.interimResults = false;
+        rec.lang = 'en-US';
+        rec.onresult = (evt) => {
+          const transcript = evt.results[0][0].transcript.trim();
+          if (transcript) sendMessage(transcript);
+          setIsRecording(false);
+          setVoiceState('idle');
+          recognitionRef.current = null;
+        };
+        rec.onerror = (e) => {
+          console.warn('Web Speech error:', e.error);
+          setIsRecording(false);
+          setVoiceState('idle');
+          recognitionRef.current = null;
+        };
+        rec.onend = () => {
+          setIsRecording(false);
+          setVoiceState('idle');
+          recognitionRef.current = null;
+        };
+        rec.start();
+        setTimeout(() => { try { rec.stop(); } catch(e){} }, 30000);
+        return;
+      } catch(e) {
+        console.warn('Web Speech failed, trying Whisper...', e);
+      }
+    }
+
+    // --- Path B: Whisper WASM (Firefox or when Web Speech unavailable) ---
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      audioChunksRef.current = [];
+
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/webm';
+      if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = '';
+
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      mediaRecorderRef.current = mr;
+      mr.ondataavailable = e => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        setVoiceState('transcribing');
+        try {
+          const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
+          const arrayBuf = await blob.arrayBuffer();
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+          const decoded = await audioCtx.decodeAudioData(arrayBuf);
+          const float32 = decoded.getChannelData(0);
+          const transcript = await transcribeAudioBuffer(float32, whisperModel, progress => {
+            if (progress.phase === 'downloading') setWhisperPct(progress.pct);
+          });
+          if (transcript) sendMessage(transcript);
+        } catch (err) {
+          console.error('Whisper transcription error:', err);
+        } finally {
+          setIsRecording(false);
+          setVoiceState('idle');
+        }
+      };
+      mr.start();
+      setTimeout(() => { if (mr.state === 'recording') mr.stop(); }, 30000);
+    } catch (err) {
+      setIsRecording(false);
+      setVoiceState('idle');
+      alert('Microphone permission denied. Please allow microphone access and try again.');
+    }
+  }, [isRecording, isTyping, whisperModel]);
+
+  const stopRecording = React.useCallback(() => {
+    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch(e){} }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+    if (!recognitionRef.current) { setIsRecording(false); setVoiceState('idle'); }
+  }, []);
+
+  // Pre-load Whisper WASM script (lazy, on first mic click)
+  const preloadWhisper = React.useCallback(() => {
+    if (whisperStatus !== 'idle' || typeof Module !== 'undefined') return;
+    setWhisperStatus('loading');
+    const s = document.createElement('script');
+    s.src = 'https://whisper.ggerganov.com/whisper.js';
+    s.onload = () => setWhisperStatus('wasm_ready');
+    s.onerror = () => setWhisperStatus('error');
+    document.head.appendChild(s);
+  }, [whisperStatus]);
+
+  // ── TTS: read AI responses when enabled ──
+  useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg && lastMsg.role === 'ai' && ttsEnabled) {
+      speakText(lastMsg.text);
+    }
+  }, [messages, ttsEnabled, speakText]);
+
+  // Stop TTS when user starts typing
+  useEffect(() => {
+    if (input && window.speechSynthesis) window.speechSynthesis.cancel();
+  }, [input]);
 
   const sendMessage = async (text) => {
     if (cooldown > 0) return;
@@ -731,6 +1715,51 @@ function HousieApp() {
     const thinkPhrases = ['Soch raha hoon... 🤔', 'Calculating... 📐', 'Processing... ⚡', 'Ek second... 🧠'];
     setSpeech(thinkPhrases[Math.floor(Math.random() * thinkPhrases.length)]);
     setShowSpeech(true);
+
+    // 1. Native Desktop / Electron Computer Control Check
+    if (window.electronAPI && window.electronAPI.executeControlCommand) {
+      try {
+        const ctrlRes = await window.electronAPI.executeControlCommand(msg);
+        if (ctrlRes && ctrlRes.plan && ctrlRes.plan.length > 0) {
+          const planText = ctrlRes.plan.map((s, idx) => `• **Step ${idx+1}:** \`${s.tool}(${JSON.stringify(s.args)})\``).join('\n');
+          setIsTyping(false);
+          setMessages(prev => [...prev, {
+            role: 'ai',
+            text: `🖥️ **Desktop Computer Action Executed** (${(ctrlRes.platform||'OS').toUpperCase()}):\n${planText}\n\n✅ Automation executed successfully!`,
+            time: timeNow()
+          }]);
+          setSpeech('Executed! ⚡');
+          setTalking(true);
+          setTimeout(() => { setTalking(false); setShowSpeech(false); }, 2200);
+          return;
+        }
+      } catch (e) {}
+    }
+
+    // 2. Python OS Controller Localhost Bridge (localhost:5000)
+    try {
+      const localRes = await fetch('http://127.0.0.1:5000/api/control', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, execute: true })
+      });
+      if (localRes.ok) {
+        const ctrlData = await localRes.json();
+        if (ctrlData.plan && ctrlData.plan.length > 0) {
+          const planText = ctrlData.plan.map((s, idx) => `• **Step ${idx+1}:** \`${s.tool}(${JSON.stringify(s.args)})\``).join('\n');
+          setIsTyping(false);
+          setMessages(prev => [...prev, {
+            role: 'ai',
+            text: `🤖 **OS Control Action Executed** (${(ctrlData.platform||'Windows').toUpperCase()}):\n${planText}\n\n✅ Executed on host system!`,
+            time: timeNow()
+          }]);
+          setSpeech('Executed! ⚡');
+          setTalking(true);
+          setTimeout(() => { setTalking(false); setShowSpeech(false); }, 2200);
+          return;
+        }
+      }
+    } catch(e) {}
 
     try {
       const res = await fetch('/api/chat', {
@@ -823,6 +1852,49 @@ function HousieApp() {
             <div className="header-sub">Python + React + SymPy Engine</div>
           </div>
           <span className="sympy-badge">⚡ SymPy</span>
+
+          {/* Get App Quick Button */}
+          <button
+            className="get-app-btn"
+            onClick={() => sendMessage('download app')}
+            title="Download Housie AI for Windows, Mac, Linux & Android"
+          >
+            📲 Get App
+          </button>
+
+          {/* Speech Assist Button */}
+          <a
+            href="./speech-assist/index.html"
+            className="get-app-btn"
+            style={{textDecoration:'none', background:'linear-gradient(135deg,#6366f1,#4f46e5)', border:'none', color:'#fff', display:'inline-flex', alignItems:'center', gap:'4px'}}
+            title="Open SpeechAssist — AI voice assistant"
+          >
+            🎙 Speech
+          </a>
+
+          {/* TTS Toggle */}
+          <button
+            className={`tts-btn ${ttsEnabled ? 'active' : ''}`}
+            onClick={() => {
+              if (ttsEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
+              setTtsEnabled(v => !v);
+            }}
+            title={ttsEnabled ? 'TTS On — click to mute' : 'TTS Off — click to enable voice'}
+          >
+            {ttsEnabled ? '🔊' : '🔇'}
+          </button>
+
+          {/* Whisper Model Selector */}
+          <select
+            className="model-select"
+            value={whisperModel}
+            onChange={e => { setWhisperModel(e.target.value); whisperLoadingPromise = null; whisperCtx = null; setWhisperStatus('idle'); }}
+            title="Whisper STT model"
+          >
+            <option value="tiny.en">🎙 tiny.en (75MB)</option>
+            <option value="base">🌐 base (142MB)</option>
+          </select>
+
           <span className="lang-badge">{langMode}</span>
         </div>
 
@@ -847,7 +1919,11 @@ function HousieApp() {
                 <div className={`avatar ${msg.role}`}>{msg.role === 'ai' ? '🧠' : '👤'}</div>
                 <div className="msg-content">
                   <div className={`bubble ${msg.role}`} dangerouslySetInnerHTML={{ __html: formatText(msg.text) }} />
-                  {msg.action && (
+                  {msg.action && msg.action.type === 'download_app' ? (
+                    <DownloadActionCard action={msg.action} />
+                  ) : msg.action && msg.action.type === 'device' ? (
+                    <DeviceActionCard action={msg.action} setMessages={setMessages} />
+                  ) : msg.action && (
                     <div className="action-card">
                       <div className="action-card-header">
                         <span className="action-icon">{msg.action.icon || '🚀'}</span>
@@ -902,10 +1978,24 @@ function HousieApp() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={cooldown > 0 ? `⏳ Rate limit active: wait ${cooldown}s...` : "Ask math, science, or say 'open youtube' / 'whatsapp hello' 🧠"}
+            placeholder={cooldown > 0 ? `⏳ Rate limit active: wait ${cooldown}s...` : voiceState === 'recording' ? '🎙️ Listening... click 🔴 to stop' : voiceState === 'transcribing' ? '🔄 Transcribing your voice...' : "Ask math, science, or say 'open youtube' / 'whatsapp hello' 🧠"}
             rows={1}
-            disabled={cooldown > 0 || isTyping}
+            disabled={cooldown > 0 || isTyping || voiceState === 'transcribing'}
           />
+
+          {/* Mic Button */}
+          <button
+            className={`mic-btn ${isRecording ? 'recording' : ''} ${voiceState === 'transcribing' ? 'transcribing' : ''}`}
+            onClick={() => {
+              if (isRecording) { stopRecording(); }
+              else { preloadWhisper(); startRecording(); }
+            }}
+            disabled={cooldown > 0 || voiceState === 'transcribing'}
+            title={isRecording ? 'Click to stop recording' : `Voice input (${WHISPER_MODELS[whisperModel]?.size} Whisper model)`}
+          >
+            {voiceState === 'transcribing' ? '🔄' : isRecording ? '🔴' : '🎙️'}
+          </button>
+
           <button
             className="send-btn"
             onClick={() => sendMessage()}
@@ -915,12 +2005,51 @@ function HousieApp() {
             {cooldown > 0 ? `⏳ ${cooldown}s` : '🚀'}
           </button>
         </div>
+
+        {/* Whisper loading progress bar */}
+        {whisperStatus === 'loading' && whisperPct > 0 && whisperPct < 100 && (
+          <div style={{padding:'4px 20px 8px'}}>
+            <div style={{fontSize:'10px',color:'#64748b',marginBottom:'3px'}}>🔄 Downloading Whisper {WHISPER_MODELS[whisperModel]?.name}... {whisperPct}%</div>
+            <div style={{height:'3px',background:'rgba(255,255,255,0.08)',borderRadius:'4px',overflow:'hidden'}}>
+              <div style={{height:'100%',width:`${whisperPct}%`,background:'linear-gradient(90deg,#6366f1,#a78bfa)',transition:'width 0.4s ease',borderRadius:'4px'}} />
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Voice status overlay */}
+      {voiceState === 'recording' && (
+        <div className="voice-status">🎙️ Listening... speak now, click 🔴 to stop</div>
+      )}
+      {voiceState === 'transcribing' && (
+        <div className="voice-status">🔄 Transcribing with Whisper {whisperModel}...</div>
+      )}
     </React.Fragment>
   );
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<HousieApp />);
+</script>
+
+<!-- Load speech synthesis voices eagerly & register PWA Service Worker -->
+<script>
+  if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); };
+    window.speechSynthesis.getVoices();
+  }
+
+  // Register PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js').catch(function() {});
+    });
+  }
+
+  // Capture Android PWA install event for 1-tap installation
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    window.deferredInstallPrompt = e;
+  });
 </script>
 
 </body>

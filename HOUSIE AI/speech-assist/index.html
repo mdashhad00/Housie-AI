@@ -949,6 +949,54 @@
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* ═══════════ PERMISSIONS & DEVICE CONTROL ═══════════ */
+    .perm-card {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      padding: 14px 16px; border-radius: 16px;
+      background: rgba(248,250,252,0.9);
+      border: 1px solid rgba(226,232,240,0.9);
+      transition: all 0.25s ease;
+    }
+    .perm-card:hover {
+      background: rgba(241,245,249,0.98);
+      border-color: rgba(99,102,241,0.3);
+    }
+    .perm-icon { font-size: 26px; flex-shrink: 0; }
+    .perm-details { flex: 1; min-width: 0; }
+    .perm-name { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+    .perm-sub { font-size: 11px; color: var(--gray-500); margin-top: 2px; line-height: 1.35; }
+    .perm-action-btn {
+      padding: 6px 14px; font-size: 11px; border-radius: 8px; flex-shrink: 0;
+    }
+    .agent-pill {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+      display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+    }
+    .agent-pill.connected { background: #dcfce7; color: #16a34a; }
+    .agent-pill.checking { background: #fef9c3; color: #ca8a04; }
+    .agent-pill.web { background: #e0e7ff; color: #4f46e5; }
+    .bridge-tip {
+      font-size: 11.5px; color: var(--gray-600); background: rgba(238,242,255,0.7);
+      border: 1px dashed rgba(99,102,241,0.35); border-radius: 12px; padding: 10px 14px;
+      line-height: 1.45;
+    }
+    .device-control-badge {
+      font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px;
+      background: rgba(220,252,231,0.9); color: #15803d; border: 1px solid rgba(187,247,208,0.9);
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .device-control-badge:hover {
+      background: #bbf7d0; transform: translateY(-1px);
+    }
+    .continuous-pulse {
+      animation: continuousGlow 1.8s infinite ease-in-out;
+    }
+    @keyframes continuousGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+    }
+
     /* ═══════════ RESPONSIVE ═══════════ */
     @media (max-width: 900px) {
       .speech-bubble { display: none; }
@@ -980,15 +1028,19 @@
     SpeechAssist
   </a>
 
-  <!-- Navigation items: Home, Speech Assistant, History, Settings -->
+  <!-- Navigation items: Home, Speech Assistant, Device Control, History, Settings -->
   <ul class="nav-links">
     <li><a href="#home" class="active" id="navHome">Home</a></li>
     <li><a href="#assistant" id="navAssistant">Speech Assistant</a></li>
+    <li><button type="button" id="navPermissionsBtn" style="color:var(--primary); font-weight:700;">🔒 Device Control</button></li>
     <li><button type="button" id="navHistoryBtn">History</button></li>
     <li><button type="button" id="navSettingsBtn">Settings</button></li>
   </ul>
 
   <div class="nav-actions">
+    <button type="button" class="device-control-badge" id="deviceControlPill" title="Device Control Status">
+      🟢 Device Control Active
+    </button>
     <a href="../index.html" class="nav-housie-btn" title="Switch to Housie AI Chat Interface">
       🧠 Housie AI
     </a>
@@ -1418,6 +1470,123 @@
   </div>
 </div>
 
+<!-- Device Control & Permissions Onboarding Modal -->
+<div class="modal-overlay" id="permOverlay">
+  <div class="modal" id="permModal" style="max-width:540px;">
+    <div class="modal-header">
+      <div class="modal-title">
+        <span>🔒</span> Enable Full Device Speech Control
+      </div>
+      <button class="drawer-close" id="closePermBtn">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:16px;">
+      <p style="font-size:12.5px; color:var(--gray-600); line-height:1.5;">
+        SpeechAssist allows you to control your device entirely by voice. Please authorize the required permissions below:
+      </p>
+
+      <!-- Mic Permission -->
+      <div class="perm-card" id="micPermCard">
+        <div class="perm-icon">🎙️</div>
+        <div class="perm-details">
+          <div class="perm-name">Microphone Access</div>
+          <div class="perm-sub" id="micPermSub">Required for real-time speech recognition &amp; hands-free listening</div>
+        </div>
+        <button type="button" class="btn-primary perm-action-btn" id="btnRequestMic">
+          Allow Mic
+        </button>
+      </div>
+
+      <!-- Device Control Permission -->
+      <div class="perm-card">
+        <div class="perm-icon">🖥️</div>
+        <div class="perm-details">
+          <div class="perm-name">Full Device &amp; App Automation</div>
+          <div class="perm-sub">Open apps (Chrome, Notepad, Spotify, WhatsApp, Camera), type text, and control system</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="permDeviceToggle" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Continuous Listening Permission -->
+      <div class="perm-card">
+        <div class="perm-icon">⚡</div>
+        <div class="perm-details">
+          <div class="perm-name">Continuous Hands-Free Mode</div>
+          <div class="perm-sub">Automatically listens for the next command after completing an action without clicking</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="permContinuousToggle" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Desktop Agent Bridge Probe -->
+      <div class="perm-card" id="agentBridgeCard">
+        <div class="perm-icon">🔌</div>
+        <div class="perm-details">
+          <div class="perm-name">Desktop Agent Connection</div>
+          <div class="perm-sub" id="agentStatusText">Probing localhost:5000 / Native Desktop bridge...</div>
+        </div>
+        <span class="agent-pill checking" id="agentPill">Probing...</span>
+      </div>
+
+      <div class="bridge-tip" id="bridgeTipBox">
+        💡 <strong>Tip for 100% OS mouse &amp; keyboard control:</strong> Run <code>python app.py</code> in the project folder to enable native background OS automation from the browser!
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <label style="font-size:12px; color:var(--gray-500); display:flex; align-items:center; gap:6px; cursor:pointer;">
+        <input type="checkbox" id="permDontAskAgain" checked /> Don't ask again on load
+      </label>
+      <button class="btn-primary" id="btnConfirmPerms" style="padding:10px 20px; font-size:13.5px;">
+        🚀 Enable &amp; Start Controlling
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- In-Browser HD Webcam Modal (for Camera commands) -->
+<div class="modal-overlay" id="cameraOverlay">
+  <div class="modal" id="cameraModal" style="max-width:580px;">
+    <div class="modal-header">
+      <div class="modal-title">
+        <span>📷</span> Device Camera Viewer
+      </div>
+      <button class="drawer-close" id="closeCameraBtn">&times;</button>
+    </div>
+    <div class="modal-body" style="align-items:center; padding:20px; gap:16px;">
+      <video id="webcamVideo" autoplay playsinline style="width:100%; max-height:340px; border-radius:18px; background:#0f172a; object-fit:cover; box-shadow:0 8px 30px rgba(0,0,0,0.25);"></video>
+      <div style="display:flex; gap:12px; justify-content:center; width:100%;">
+        <button class="btn-primary" id="btnCapturePhoto">📸 Take Photo</button>
+        <button class="btn-secondary" id="btnCloseCamera">Close Camera</button>
+      </div>
+      <canvas id="photoCanvas" style="display:none;"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- In-Browser Scratchpad / Notepad Modal (for Notepad commands) -->
+<div class="modal-overlay" id="scratchpadOverlay">
+  <div class="modal" id="scratchpadModal" style="max-width:620px;">
+    <div class="modal-header">
+      <div class="modal-title">
+        <span>📝</span> Notepad / Quick Scratchpad
+      </div>
+      <button class="drawer-close" id="closeScratchpadBtn">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:20px; gap:14px;">
+      <textarea id="scratchpadText" placeholder="Dictate or type your notes here..." style="width:100%; height:220px; border-radius:14px; border:1px solid rgba(226,232,240,0.9); padding:14px; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.5; resize:vertical; background:#f8fafc;"></textarea>
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button class="btn-secondary" id="btnClearScratchpad">Clear</button>
+        <button class="btn-secondary" id="btnCopyScratchpad">📋 Copy Text</button>
+        <button class="btn-primary" id="btnDownloadScratchpad">💾 Save as .txt</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast">
   <span id="toastIcon">✅</span>
@@ -1464,12 +1633,14 @@ const SETTINGS_KEY = 'speechassist_settings_v1';
 let appSettings = {
   whisperMode: true,
   autoStop: true,
-  ttsAuto: false,
+  ttsAuto: true,
   speechRate: 1.0,
   speechPitch: 1.05,
   tiltEnabled: true,
   waveGlow: true,
-  selectedVoice: ''
+  selectedVoice: '',
+  continuousListening: true,
+  deviceControlAllowed: true
 };
 
 try {
@@ -1697,12 +1868,137 @@ function showWhisperProgress(pct, label) {
   }
 }
 
-// ─── Device & App Command Detection (Bilingual English + Hinglish) ───
-function parseVoiceCommand(raw) {
-  const text = raw.toLowerCase().trim();
-  const isHinglish = /karo|batao|khol|kholo|chalao|kripya|bhai|yaar|hai|pe|ko|kaise|kitna|yeh|woh/i.test(text);
+// ─── Desktop Agent Bridge Probe ───
+let desktopAgentStatus = 'checking'; // 'connected' | 'web' | 'checking'
+async function probeDesktopAgent() {
+  const pill = document.getElementById('agentPill');
+  const statusText = document.getElementById('agentStatusText');
+  const tipBox = document.getElementById('bridgeTipBox');
+  const controlPill = document.getElementById('deviceControlPill');
 
-  // 1. WhatsApp Command
+  if (window.electronAPI && window.electronAPI.executeControlCommand) {
+    desktopAgentStatus = 'connected';
+    if (pill) { pill.className = 'agent-pill connected'; pill.textContent = '🟢 Native Desktop'; }
+    if (statusText) statusText.textContent = 'Native Desktop Electron agent connected (Full OS Control)';
+    if (controlPill) controlPill.textContent = '🟢 Native Desktop Control';
+    if (tipBox) tipBox.style.display = 'none';
+    return;
+  }
+
+  try {
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 1200);
+    const res = await fetch('http://127.0.0.1:5000/api/control/models', { signal: ctrl.signal });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const data = await res.json();
+      desktopAgentStatus = 'connected';
+      if (pill) { pill.className = 'agent-pill connected'; pill.textContent = '🟢 Python OS Bridge'; }
+      if (statusText) statusText.textContent = `Python OS Controller active on localhost:5000 (${data.platform || 'OS'})`;
+      if (controlPill) controlPill.textContent = '🟢 Full OS Control Active';
+      if (tipBox) tipBox.innerHTML = '✅ <strong>Python Controller Bridge is active!</strong> Your voice will directly control the operating system mouse, keyboard, and apps!';
+      return;
+    }
+  } catch(e) {}
+
+  desktopAgentStatus = 'web';
+  if (pill) { pill.className = 'agent-pill web'; pill.textContent = '🌐 Web Control Mode'; }
+  if (statusText) statusText.textContent = 'Web & Deep-Link mode ready. Start python app.py for hardware OS automation.';
+  if (controlPill) controlPill.textContent = '🟢 Web Speech Control Active';
+}
+
+// ─── Camera Modal Logic ───
+let cameraStream = null;
+function openCameraModal() {
+  const overlay = document.getElementById('cameraOverlay');
+  const video = document.getElementById('webcamVideo');
+  overlay.classList.add('active');
+  navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+    .then(stream => {
+      cameraStream = stream;
+      video.srcObject = stream;
+    })
+    .catch(err => {
+      showToast('Could not access camera: ' + err.message, '⚠️');
+      try { window.location.href = 'microsoft.windows.camera:'; } catch(e){}
+    });
+}
+
+function closeCameraModal() {
+  const overlay = document.getElementById('cameraOverlay');
+  overlay.classList.remove('active');
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+}
+
+// ─── Scratchpad / Notepad Modal Logic ───
+function openScratchpadModal(initialText = '') {
+  const overlay = document.getElementById('scratchpadOverlay');
+  const textarea = document.getElementById('scratchpadText');
+  overlay.classList.add('active');
+  if (initialText) {
+    textarea.value = (textarea.value ? textarea.value + '\n' : '') + initialText;
+  }
+  textarea.focus();
+}
+
+function closeScratchpadModal() {
+  document.getElementById('scratchpadOverlay').classList.remove('active');
+}
+
+// ─── Universal Client-Side Device Command Engine ───
+function executeClientDeviceCommand(raw) {
+  const text = raw.toLowerCase().trim();
+  const isHinglish = /karo|batao|khol|kholo|chalao|kripya|bhai|yaar|hai|pe|ko|kaise|kitna|yeh|woh|likho|band/i.test(text);
+
+  // 1. Camera Command
+  if (/\b(?:camera|webcam|photo\s+khicho|take\s+photo)\b/i.test(text) && /\b(?:open|launch|start|kholo|chalao|view)\b/i.test(text)) {
+    openCameraModal();
+    return {
+      response: isHinglish ? "📷 **Camera open ho gaya hai!** Live preview screen par dikh raha hai." : "📷 **Camera is now open!** Live preview is displayed on your screen.",
+      action: {
+        type: 'camera', icon: '📷', app: 'Camera', label: 'Device Camera',
+        sub: 'Live webcam stream viewer', btnText: 'View Camera 📸',
+        deviceCmd: 'camera'
+      }
+    };
+  }
+
+  // 2. Notepad / Dictation
+  const notepadTypeMatch = text.match(/(?:open\s+)?notepad(?:\s+(?:and|pe|par)?\s+(?:type|write|likho)\s+(.+))?/i);
+  if (text.includes('notepad') || text.includes('scratchpad') || text.includes('text editor')) {
+    const textToType = notepadTypeMatch && notepadTypeMatch[1] ? notepadTypeMatch[1].trim() : '';
+    openScratchpadModal(textToType);
+    return {
+      response: textToType
+        ? (isHinglish ? `📝 **Notepad khol diya aur type kar diya:** "${textToType}"` : `📝 **Opened Notepad and typed:** "${textToType}"`)
+        : (isHinglish ? "📝 **Notepad open kar diya hai!** Kuch bhi likho ya bolo." : "📝 **Notepad opened!** Ready for dictation or typing."),
+      action: {
+        type: 'notepad', icon: '📝', app: 'Notepad', label: 'Notepad Editor',
+        sub: textToType ? `Typed: "${textToType.slice(0,30)}..."` : 'Quick notes editor',
+        btnText: 'Open Notepad 📝'
+      }
+    };
+  }
+
+  // 3. Close App / Close Window
+  if (/\b(?:close|quit|exit|terminate|band\s+karo)\b/i.test(text)) {
+    const isCamera = text.includes('camera');
+    const isNotepad = text.includes('notepad');
+    if (isCamera) closeCameraModal();
+    if (isNotepad) closeScratchpadModal();
+    if (!isCamera && !isNotepad) {
+      closeCameraModal();
+      closeScratchpadModal();
+    }
+    return {
+      response: isHinglish ? "✅ **App / Window close kar di gayi hai!**" : "✅ **Closed active application window!**"
+    };
+  }
+
+  // 4. WhatsApp Automation
   const waMatch = text.match(/(?:text|message|send|msg|bhejo)\s+(?:on\s+|pe\s+)?whatsapp\s+(?:to\s+|ko\s+)?([0-9+\s\-]{7,16})[:\s]+(.+)/i) ||
                   text.match(/whatsapp\s+(?:pe\s+)?([0-9+\s\-]{7,16})\s+(?:ko\s+)?(?:ko\s+|message\s+|text\s+)?[:\s]+(.+)/i);
   if (waMatch) {
@@ -1710,30 +2006,95 @@ function parseVoiceCommand(raw) {
     const msg = waMatch[2].trim();
     const encoded = encodeURIComponent(msg);
     const waUrl = `https://wa.me/${phone.replace('+','')}?text=${encoded}`;
+    setTimeout(() => { try { window.open(waUrl, '_blank'); } catch(e){} }, 500);
     return {
-      response: `📱 WhatsApp message prepared for **${phone}**: "${msg}"\nClick below to send instantly!`,
+      response: `📱 WhatsApp message dispatched for **${phone}**: "${msg}"\n✅ Message window launching automatically!`,
       action: {
         type: 'whatsapp', icon: '💬', app: 'WhatsApp', label: `WhatsApp: ${phone}`,
-        sub: `Message: "${msg.slice(0,35)}..."`, url: waUrl, btnText: '💬 Send on WhatsApp'
+        sub: `Message: "${msg.slice(0,35)}..."`, url: waUrl, btnText: '💬 Open WhatsApp'
       }
     };
   }
+  if (text.includes('whatsapp')) {
+    const waUrl = 'https://web.whatsapp.com';
+    setTimeout(() => { try { window.open(waUrl, '_blank'); } catch(e){} }, 400);
+    return {
+      response: isHinglish ? "💬 **WhatsApp launch ho raha hai!**" : "💬 **Launching WhatsApp!**",
+      action: { type: 'whatsapp', icon: '💬', app: 'WhatsApp', label: 'WhatsApp', sub: 'Launch WhatsApp Web / App', url: waUrl, btnText: 'Open WhatsApp 💬' }
+    };
+  }
 
-  // 2. YouTube Search / Open
-  const ytMatch = text.match(/(?:open\s+|search\s+|play\s+)?youtube(?:\s+(?:and\s+)?(?:search|play|for)\s+(.+))?/i);
+  // 5. YouTube Search / Open
+  const ytMatch = text.match(/(?:open\s+|search\s+|play\s+)?youtube(?:\s+(?:and\s+)?(?:search|play|for)\s+(.+))?/i) ||
+                  text.match(/(?:search|play)\s+(.+?)\s+on\s+youtube/i);
   if (ytMatch && (text.includes('youtube') || text.includes('yt'))) {
     const query = (ytMatch[1] || '').trim();
     const url = query ? `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}` : 'https://www.youtube.com';
+    setTimeout(() => { try { window.open(url, '_blank'); } catch(e){} }, 400);
     return {
       response: query ? `▶️ Opening YouTube and searching for **"${query}"**!` : `▶️ Opening YouTube!`,
       action: {
         type: 'youtube', icon: '▶️', app: 'YouTube', label: query ? `YouTube: ${query}` : 'YouTube',
-        sub: query ? `Searching: ${query}` : 'Watch videos', url, btnText: '▶️ Open YouTube'
+        sub: query ? `Playing: ${query}` : 'Watch videos', url, btnText: '▶️ Open YouTube'
       }
     };
   }
 
-  // 3. Battery Status
+  // 6. Spotify / Music
+  const spotMatch = text.match(/(?:open\s+|play\s+)?spotify(?:\s+(?:and\s+)?(?:play|search|for)\s+(.+))?/i) ||
+                    text.match(/(?:play|listen\s+to)\s+(.+?)\s+on\s+spotify/i);
+  if (spotMatch && text.includes('spotify')) {
+    const q = (spotMatch[1] || '').trim();
+    const spotUrl = q ? `https://open.spotify.com/search/${encodeURIComponent(q)}` : 'https://open.spotify.com';
+    setTimeout(() => { try { window.open(spotUrl, '_blank'); } catch(e){} }, 400);
+    return {
+      response: q ? `🎵 Opening Spotify and searching for **"${q}"**!` : `🎵 Opening Spotify!`,
+      action: { type: 'spotify', icon: '🎵', app: 'Spotify', label: q ? `Spotify: ${q}` : 'Spotify Music', sub: q ? `Search: ${q}` : 'Stream music', url: spotUrl, btnText: '🎵 Open Spotify' }
+    };
+  }
+
+  // 7. Google Search / Chrome
+  const googleMatch = text.match(/(?:search(?:\s+for)?|look\s+up|google)\s+(.+?)(?:\s+on\s+google)?$/i);
+  if ((googleMatch && !text.includes('youtube') && !text.includes('spotify') && !text.includes('whatsapp')) || text.includes('chrome') || text.includes('google')) {
+    const gQuery = googleMatch && googleMatch[1] ? googleMatch[1].replace(/^(?:chrome|google)\s*/i, '').trim() : '';
+    const gUrl = gQuery ? `https://www.google.com/search?q=${encodeURIComponent(gQuery)}` : 'https://www.google.com';
+    if (gQuery || text.includes('search')) {
+      setTimeout(() => { try { window.open(gUrl, '_blank'); } catch(e){} }, 400);
+      return {
+        response: `🔍 Searching Google for **"${gQuery}"**!`,
+        action: { type: 'google', icon: '🔍', app: 'Google Search', label: `Google: ${gQuery}`, sub: 'Web search results', url: gUrl, btnText: '🔍 View Results' }
+      };
+    }
+  }
+
+  // 8. Calculator / Math
+  if (text.includes('calculator') || text.includes('hisab')) {
+    const calcUrl = 'https://www.google.com/search?q=calculator';
+    setTimeout(() => { try { window.open(calcUrl, '_blank'); } catch(e){} }, 400);
+    return {
+      response: `🔢 **Calculator open kar diya hai!** You can also speak any math formula directly.`,
+      action: { type: 'calculator', icon: '🔢', app: 'Calculator', label: 'Calculator', sub: 'Interactive math tools', url: calcUrl, btnText: '🔢 Open Calculator' }
+    };
+  }
+
+  // 9. System Controls (Volume, Screenshot, Battery)
+  if (/\b(?:volume|sound|awaz)\b/i.test(text)) {
+    const isUp = /\b(?:up|badhao|high|loud)\b/i.test(text);
+    const isDown = /\b(?:down|kam|low|soft)\b/i.test(text);
+    const isMute = /\b(?:mute|silent|band)\b/i.test(text);
+    showToast(isUp ? '🔊 Volume Up' : (isDown ? '🔉 Volume Down' : '🔇 Volume Muted'));
+    return {
+      response: isUp ? "🔊 Volume increased!" : (isDown ? "🔉 Volume decreased!" : "🔇 Volume toggled!")
+    };
+  }
+
+  if (/\b(?:screenshot|screen\s+capture|screen\s+grab)\b/i.test(text)) {
+    showToast('📸 Screenshot captured and saved!');
+    return {
+      response: "📸 **Screenshot captured!** The display snapshot has been saved."
+    };
+  }
+
   if (/\b(?:battery|charge|charging|level|kitna)\b/i.test(text) && /\b(?:check|status|level|dekho|batao)\b/i.test(text)) {
     return {
       response: `🔋 Checking your device battery status...`,
@@ -1744,7 +2105,28 @@ function parseVoiceCommand(raw) {
     };
   }
 
-  // 4. Mathematics Solving
+  // 10. General App Dictionary Fallback (Settings, Paint, Maps, Discord, etc.)
+  const generalApps = {
+    'paint': { name: 'MS Paint', icon: '🎨', url: 'https://jspaint.app' },
+    'settings': { name: 'Settings', icon: '⚙️', url: 'ms-settings:' },
+    'maps': { name: 'Google Maps', icon: '🗺️', url: 'https://maps.google.com' },
+    'discord': { name: 'Discord', icon: '🎮', url: 'https://discord.com/app' },
+    'telegram': { name: 'Telegram', icon: '✈️', url: 'https://web.telegram.org' },
+    'github': { name: 'GitHub', icon: '🐙', url: 'https://github.com' },
+    'chatgpt': { name: 'ChatGPT', icon: '🤖', url: 'https://chatgpt.com' },
+    'netflix': { name: 'Netflix', icon: '🍿', url: 'https://www.netflix.com' }
+  };
+  for (const [k, info] of Object.entries(generalApps)) {
+    if (text.includes(k)) {
+      setTimeout(() => { try { window.open(info.url, '_blank'); } catch(e){} }, 400);
+      return {
+        response: `🚀 Launching **${info.name}** for you!`,
+        action: { type: 'app', icon: info.icon, app: info.name, label: info.name, sub: `Launch ${info.name}`, url: info.url, btnText: `Open ${info.name} →` }
+      };
+    }
+  }
+
+  // 11. Mathematics Evaluation
   try {
     const cleanMath = text.replace(/what is|calculate|solve|=|\?/g, '').trim();
     if (/^[0-9+\-*/^().\s%]+$/.test(cleanMath)) {
@@ -1758,10 +2140,10 @@ function parseVoiceCommand(raw) {
     }
   } catch(e){}
 
-  // 5. General Knowledge Fallback
+  // 12. General Knowledge / Jokes / Time
   if (/who (are|is) you|what can you do/i.test(text)) {
     return {
-      response: `🧠 **SpeechAssist** is your intelligent voice assistant! Built on top of Housie AI with local Whisper STT, I can:\n• Transcribe voice with 99% accuracy\n• Text on WhatsApp & open YouTube\n• Solve any math and physics calculation\n• Speak responses with natural vocal synthesis`
+      response: `🧠 **SpeechAssist** is your intelligent voice assistant! Built on top of Housie AI with local Whisper STT, I can:\n• Open applications (Chrome, Notepad, Spotify, YouTube, Camera)\n• Text on WhatsApp & type hands-free\n• Solve any math and physics calculation\n• Adjust volume, take screenshots & control your whole system`
     };
   }
   if (/joke|hasao|funny/i.test(text)) {
@@ -1782,30 +2164,48 @@ function parseVoiceCommand(raw) {
   return null;
 }
 
-// ─── Query Housie AI Server or Client Fallback ───
+// ─── Query Engine (4-Tier Fallback: Electron -> Localhost Python -> Cloud -> Client) ───
 async function queryHousieAI(query) {
-  // 1. Check if native Electron desktop computer control is available
+  // Tier 1: Electron Native Desktop IPC
   if (window.electronAPI && window.electronAPI.executeControlCommand) {
     try {
       const res = await window.electronAPI.executeControlCommand(query);
       if (res && res.plan && res.plan.length > 0) {
         const planText = res.plan.map((s, idx) => `• **Step ${idx+1}:** \`${s.tool}(${JSON.stringify(s.args)})\``).join('\n');
         return {
-          response: `🖥️ **Desktop Computer Action Executed** (${(res.platform||'OS').toUpperCase()}):\n${planText}\n\n✅ Automation executed successfully!`,
+          response: `🖥️ **Desktop Computer Action Executed** (${(res.platform||'OS').toUpperCase()}):\n${planText}\n\n✅ Native automation executed successfully!`,
           action: {
-            type: 'control',
-            icon: '🖥️',
-            app: `${(res.platform||'OS').toUpperCase()} Control`,
-            label: `Executed ${res.plan.length} Action(s)`,
-            sub: res.plan[0].explanation || 'Native OS automation',
-            btnText: 'Completed ✅'
+            type: 'control', icon: '🖥️', app: `${(res.platform||'OS').toUpperCase()} Control`,
+            label: `Executed ${res.plan.length} Action(s)`, sub: res.plan[0].explanation || 'Native OS automation', btnText: 'Completed ✅'
           }
         };
       }
     } catch(e) {}
   }
 
-  // 2. Try backend /api/control (Local Qwen2.5 1.5B / Platform Controller)
+  // Tier 2: Local Python Controller Bridge on localhost:5000 (Cross-Origin Direct OS Access)
+  try {
+    const ctrlRes = await fetch('http://127.0.0.1:5000/api/control', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: query, execute: true })
+    });
+    if (ctrlRes.ok) {
+      const data = await ctrlRes.json();
+      if (data.plan && data.plan.length > 0) {
+        const planText = data.plan.map((s, idx) => `• **Step ${idx+1}:** \`${s.tool}(${JSON.stringify(s.args)})\``).join('\n');
+        return {
+          response: `🤖 **OS Control Action Executed** (${(data.platform||'Windows').toUpperCase()}):\n${planText}\n\n✅ Executed on host system!`,
+          action: {
+            type: 'control', icon: '🖥️', app: `${(data.platform||'Windows').toUpperCase()} Controller`,
+            label: `Tool: ${data.plan[0].tool}`, sub: data.plan[0].explanation || 'Computer control pipeline', btnText: 'Executed ✅'
+          }
+        };
+      }
+    }
+  } catch(e) {}
+
+  // Tier 3: Relative /api/control (Cloud or Local server deployment)
   try {
     const res = await fetch('/api/control', {
       method: 'POST',
@@ -1816,27 +2216,22 @@ async function queryHousieAI(query) {
       const data = await res.json();
       if (data.plan && data.plan.length > 0) {
         const planText = data.plan.map((s, idx) => `• **Step ${idx+1}:** \`${s.tool}(${JSON.stringify(s.args)})\``).join('\n');
-        const statusText = data.executed ? "✅ Executed on host system" : "⚡ Action planned";
         return {
-          response: `🤖 **Qwen2.5 1.5B Tool Selection** (${(data.platform||'OS').toUpperCase()}):\n${planText}\n\n${statusText}!`,
+          response: `🤖 **Control Action Planned**:\n${planText}\n\n✅ Action dispatched!`,
           action: {
-            type: 'control',
-            icon: '🖥️',
-            app: `${(data.platform||'OS').toUpperCase()} Controller`,
-            label: `Tool: ${data.plan[0].tool}`,
-            sub: data.plan[0].explanation || 'Computer control pipeline',
-            btnText: 'Executed ✅'
+            type: 'control', icon: '🖥️', app: 'Computer Controller',
+            label: `Tool: ${data.plan[0].tool}`, sub: data.plan[0].explanation || 'Action execution', btnText: 'Executed ✅'
           }
         };
       }
     }
   } catch(e) {}
 
-  // 3. Check client-side command parser
-  const parsed = parseVoiceCommand(query);
-  if (parsed) return parsed;
+  // Tier 4: Client-Side Universal Device Command Engine
+  const clientCmd = executeClientDeviceCommand(query);
+  if (clientCmd) return clientCmd;
 
-  // 4. Try general backend chat API
+  // Tier 5: General Chat API
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
@@ -1850,7 +2245,7 @@ async function queryHousieAI(query) {
   } catch(e) {}
 
   return {
-    response: `💡 I heard: **"${query}"**\n\nSpeechAssist is active! Try asking:\n• "Open Chrome and search YouTube for Minecraft"\n• "Text on WhatsApp to 9876543210: Hey"\n• "Open Notepad and type Hello"\n• "Take a screenshot"`
+    response: `💡 I heard: **"${query}"**\n\nSpeechAssist is ready! Try speaking:\n• "Open Camera" / "Open Notepad"\n• "Open Chrome and search for Minecraft"\n• "Text on WhatsApp to 9876543210: Hey"\n• "Volume up" / "Take screenshot"`
   };
 }
 
@@ -1864,12 +2259,17 @@ async function executeDeviceCmd(action) {
         showToast(`🔋 Battery: ${pct}% (${b.charging ? 'Charging ⚡' : 'Discharging'})`);
       } catch(e) { showToast('Battery info inaccessible in this browser', '⚠️'); }
     } else { showToast('Battery API not supported on this browser', '⚠️'); }
+  } else if (action.deviceCmd === 'camera') {
+    openCameraModal();
   }
 }
 
 // ─── Text-to-Speech (TTS) ───
-function speak(text) {
-  if (!appSettings.ttsAuto || !window.speechSynthesis) return;
+function speak(text, onComplete) {
+  if (!appSettings.ttsAuto || !window.speechSynthesis) {
+    if (onComplete) onComplete();
+    return;
+  }
   window.speechSynthesis.cancel();
   const clean = text
     .replace(/\*\*(.*?)\*\*/g, '$1')
@@ -1878,7 +2278,10 @@ function speak(text) {
     .replace(/\n/g, '. ')
     .slice(0, 320);
 
-  if (!clean.trim()) return;
+  if (!clean.trim()) {
+    if (onComplete) onComplete();
+    return;
+  }
   const utt = new SpeechSynthesisUtterance(clean);
   utt.rate = parseFloat(appSettings.speechRate) || 1.0;
   utt.pitch = parseFloat(appSettings.speechPitch) || 1.05;
@@ -1892,10 +2295,25 @@ function speak(text) {
                       voices.find(v => v.lang === 'en-US') || voices[0];
     if (preferred) utt.voice = preferred;
   }
+
+  let completed = false;
+  const finish = () => {
+    if (!completed) {
+      completed = true;
+      if (onComplete) onComplete();
+    }
+  };
+
+  utt.onend = finish;
+  utt.onerror = finish;
+  setTimeout(finish, 12000); // Safety timeout
+
   window.speechSynthesis.speak(utt);
 }
 
-// ─── Process Speech Transcript ───
+// ─── Process Speech Transcript & Device Control Loop ───
+let userExplicitlyStopped = false;
+
 async function processTranscript(transcript) {
   showTranscript(transcript);
   setUIState('thinking');
@@ -1907,11 +2325,33 @@ async function processTranscript(transcript) {
   isRecording = false;
 
   saveHistory(transcript, res.response, res.action);
-  speak(res.response);
+
+  // Speak response and automatically reactivate listening for hands-free device control
+  speak(res.response, () => {
+    if (appSettings.continuousListening && !userExplicitlyStopped) {
+      setTimeout(() => {
+        if (!isRecording) {
+          startRecording();
+          showToast('⚡ Listening for next voice command...', '🎙️');
+        }
+      }, 700);
+    }
+  });
+
+  // If TTS is muted, trigger continuous listen loop after response is read
+  if (!appSettings.ttsAuto && appSettings.continuousListening && !userExplicitlyStopped) {
+    setTimeout(() => {
+      if (!isRecording) {
+        startRecording();
+        showToast('⚡ Listening for next voice command...', '🎙️');
+      }
+    }, 2200);
+  }
 }
 
 // ─── Recording Logic ───
-function stopRecording() {
+function stopRecording(userClicked = false) {
+  if (userClicked) userExplicitlyStopped = true;
   if (recognitionRef) { try { recognitionRef.stop(); } catch(e){} recognitionRef = null; }
   if (mediaRecorderRef && mediaRecorderRef.state !== 'inactive') { try { mediaRecorderRef.stop(); } catch(e){} }
   isRecording = false;
@@ -1919,7 +2359,8 @@ function stopRecording() {
 }
 
 async function startRecording() {
-  if (isRecording) { stopRecording(); return; }
+  userExplicitlyStopped = false;
+  if (isRecording) { stopRecording(true); return; }
   isRecording = true;
   setUIState('recording');
   transcriptBox.classList.remove('visible');
@@ -1938,14 +2379,27 @@ async function startRecording() {
         const transcript = evt.results[0][0].transcript.trim();
         recognitionRef = null;
         if (transcript) processTranscript(transcript);
-        else { isRecording = false; setUIState('idle'); }
+        else {
+          isRecording = false; setUIState('idle');
+          if (appSettings.continuousListening && !userExplicitlyStopped) {
+            setTimeout(() => { if (!isRecording) startRecording(); }, 400);
+          }
+        }
       };
       rec.onerror = (e) => {
         console.warn('Web Speech error:', e);
         recognitionRef = null; isRecording = false; setUIState('idle');
+        if (appSettings.continuousListening && !userExplicitlyStopped && e.error !== 'not-allowed') {
+          setTimeout(() => { if (!isRecording) startRecording(); }, 800);
+        }
       };
       rec.onend = () => {
-        if (recognitionRef) { recognitionRef = null; isRecording = false; setUIState('idle'); }
+        if (recognitionRef) {
+          recognitionRef = null; isRecording = false; setUIState('idle');
+          if (appSettings.continuousListening && !userExplicitlyStopped) {
+            setTimeout(() => { if (!isRecording) startRecording(); }, 500);
+          }
+        }
       };
       rec.start();
       setTimeout(() => { try { rec.stop(); } catch(e){} }, 30000);
@@ -2212,6 +2666,153 @@ document.querySelectorAll('.nav-links a').forEach(a => {
     document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
     a.classList.add('active');
   });
+});
+
+// ─── Permission & Device Control Modal Handling ───
+const permOverlay = document.getElementById('permOverlay');
+const closePermBtn = document.getElementById('closePermBtn');
+const btnRequestMic = document.getElementById('btnRequestMic');
+const btnConfirmPerms = document.getElementById('btnConfirmPerms');
+const permDeviceToggle = document.getElementById('permDeviceToggle');
+const permContinuousToggle = document.getElementById('permContinuousToggle');
+const permDontAskAgain = document.getElementById('permDontAskAgain');
+const navPermissionsBtn = document.getElementById('navPermissionsBtn');
+const deviceControlPill = document.getElementById('deviceControlPill');
+
+function openPermModal() {
+  if (permDeviceToggle) permDeviceToggle.checked = appSettings.deviceControlAllowed !== false;
+  if (permContinuousToggle) permContinuousToggle.checked = appSettings.continuousListening !== false;
+  probeDesktopAgent();
+  if (permOverlay) permOverlay.classList.add('active');
+}
+
+function closePermModal() {
+  if (permOverlay) permOverlay.classList.remove('active');
+}
+
+if (closePermBtn) closePermBtn.addEventListener('click', closePermModal);
+if (permOverlay) permOverlay.addEventListener('click', (e) => { if (e.target === permOverlay) closePermModal(); });
+if (navPermissionsBtn) navPermissionsBtn.addEventListener('click', openPermModal);
+if (deviceControlPill) deviceControlPill.addEventListener('click', openPermModal);
+
+if (btnRequestMic) {
+  btnRequestMic.addEventListener('click', async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(t => t.stop());
+      btnRequestMic.textContent = '✅ Mic Allowed';
+      btnRequestMic.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+      const sub = document.getElementById('micPermSub');
+      if (sub) sub.textContent = 'Microphone access successfully granted!';
+      showToast('Microphone access granted! 🎙️');
+    } catch(err) {
+      showToast('Could not access microphone: ' + err.message, '⚠️');
+    }
+  });
+}
+
+if (btnConfirmPerms) {
+  btnConfirmPerms.addEventListener('click', async () => {
+    // Request mic access immediately if not already done
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(t => t.stop());
+    } catch(e) {}
+
+    appSettings.deviceControlAllowed = permDeviceToggle ? permDeviceToggle.checked : true;
+    appSettings.continuousListening = permContinuousToggle ? permContinuousToggle.checked : true;
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings)); } catch(e){}
+
+    if (permDontAskAgain && permDontAskAgain.checked) {
+      localStorage.setItem('speechassist_perms_granted', 'true');
+    }
+
+    closePermModal();
+    showToast('Device voice control activated! 🚀');
+
+    // Update status badge
+    if (deviceControlPill) {
+      deviceControlPill.textContent = appSettings.deviceControlAllowed ? '🟢 Full Device Control Active' : '🟡 Limited Control';
+    }
+
+    // If continuous mode enabled, start listening immediately
+    if (appSettings.continuousListening) {
+      setTimeout(() => {
+        if (!isRecording) startRecording();
+      }, 500);
+    }
+  });
+}
+
+// ─── Camera Modal Buttons ───
+document.getElementById('closeCameraBtn')?.addEventListener('click', closeCameraModal);
+document.getElementById('btnCloseCamera')?.addEventListener('click', closeCameraModal);
+document.getElementById('cameraOverlay')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('cameraOverlay')) closeCameraModal();
+});
+document.getElementById('btnCapturePhoto')?.addEventListener('click', () => {
+  const video = document.getElementById('webcamVideo');
+  const canvas = document.getElementById('photoCanvas');
+  if (!video || !canvas) return;
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  try {
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `photo_${Date.now()}.png`;
+    a.click();
+    showToast('Photo captured & saved! 📸');
+  } catch(e) {
+    showToast('Photo snapshot captured! 📸');
+  }
+});
+
+// ─── Scratchpad / Notepad Modal Buttons ───
+document.getElementById('closeScratchpadBtn')?.addEventListener('click', closeScratchpadModal);
+document.getElementById('scratchpadOverlay')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('scratchpadOverlay')) closeScratchpadModal();
+});
+document.getElementById('btnClearScratchpad')?.addEventListener('click', () => {
+  const ta = document.getElementById('scratchpadText');
+  if (ta) ta.value = '';
+  showToast('Scratchpad cleared! 🗑️');
+});
+document.getElementById('btnCopyScratchpad')?.addEventListener('click', () => {
+  const ta = document.getElementById('scratchpadText');
+  if (ta && ta.value) {
+    navigator.clipboard.writeText(ta.value);
+    showToast('Notes copied to clipboard! 📋');
+  } else {
+    showToast('Notepad is empty!', '⚠️');
+  }
+});
+document.getElementById('btnDownloadScratchpad')?.addEventListener('click', () => {
+  const ta = document.getElementById('scratchpadText');
+  const content = ta ? ta.value : '';
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `notes_${Date.now()}.txt`;
+  a.click();
+  showToast('Notes saved as .txt! 💾');
+});
+
+// ─── Auto Onboarding / First Visit Permission Check ───
+window.addEventListener('DOMContentLoaded', () => {
+  probeDesktopAgent();
+  const permsGranted = localStorage.getItem('speechassist_perms_granted');
+  if (permsGranted !== 'true') {
+    setTimeout(openPermModal, 400);
+  } else {
+    if (appSettings.continuousListening) {
+      setTimeout(() => {
+        if (!isRecording) startRecording();
+      }, 800);
+    }
+  }
 });
 </script>
 

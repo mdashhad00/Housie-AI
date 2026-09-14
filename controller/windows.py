@@ -31,11 +31,23 @@ class WindowsController(BaseController):
             "edge": "msedge",
             "microsoft edge": "msedge",
             "firefox": "firefox",
+            "brave": "brave",
+            "opera": "opera",
             "notepad": "notepad",
             "calculator": "calc",
             "calc": "calc",
+            "camera": "microsoft.windows.camera:",
+            "webcam": "microsoft.windows.camera:",
+            "photos": "ms-photos:",
+            "paint": "mspaint",
+            "mspaint": "mspaint",
+            "snipping tool": "snippingtool",
+            "snippingtool": "snippingtool",
             "spotify": "spotify:",
             "whatsapp": "whatsapp:",
+            "discord": "discord:",
+            "telegram": "telegram:",
+            "zoom": "zoommtg:",
             "code": "code",
             "vs code": "code",
             "vscode": "code",
@@ -48,26 +60,92 @@ class WindowsController(BaseController):
             "explorer": "explorer",
             "file explorer": "explorer",
             "files": "explorer",
-            "paint": "mspaint",
+            "downloads": "shell:Downloads",
+            "documents": "shell:Personal",
             "settings": "ms-settings:",
+            "task manager": "taskmgr",
+            "taskmgr": "taskmgr",
+            "control panel": "control",
             "word": "winword",
-            "excel": "excel"
+            "excel": "excel",
+            "powerpoint": "powerpnt",
+            "youtube": "https://www.youtube.com",
+            "google": "https://www.google.com",
+            "gmail": "https://mail.google.com",
+            "maps": "https://maps.google.com",
+            "github": "https://github.com",
+            "chatgpt": "https://chatgpt.com",
+            "netflix": "https://www.netflix.com"
         }
 
         target = app_map.get(clean_name, clean_name)
         try:
-            if target.endswith(":") or target.startswith("http"):
+            if target.endswith(":") or target.startswith("http") or target.startswith("shell:"):
                 os.startfile(target)
+                return f"Launched Windows application: {name} ({target})"
             else:
-                cmd = f"{target} {args}".strip()
+                cmd = f"start {target} {args}".strip()
                 subprocess.Popen(cmd, shell=True)
-            return f"Launched Windows application: {name} ({target})"
+                return f"Launched Windows application: {name} ({target})"
         except Exception as e:
             try:
                 subprocess.Popen(f"start {target}", shell=True)
                 return f"Started {target} via Windows Shell"
             except Exception as e2:
                 raise RuntimeError(f"Failed to open '{name}': {e2}")
+
+    def close_app(self, name: str) -> str:
+        clean_name = name.lower().strip()
+        proc_map = {
+            "notepad": "notepad.exe",
+            "chrome": "chrome.exe",
+            "edge": "msedge.exe",
+            "calc": "CalculatorApp.exe",
+            "calculator": "CalculatorApp.exe",
+            "paint": "mspaint.exe",
+            "code": "Code.exe",
+            "spotify": "Spotify.exe",
+            "whatsapp": "WhatsApp.exe",
+            "terminal": "WindowsTerminal.exe",
+            "cmd": "cmd.exe"
+        }
+
+        if clean_name in ["current", "active", "this", "window", "tab"]:
+            self.press_key("f4", ["alt"])
+            return "Closed active window (Alt+F4)"
+
+        proc = proc_map.get(clean_name)
+        if proc:
+            try:
+                subprocess.run(f"taskkill /IM {proc} /F", shell=True, check=False)
+                return f"Terminated {proc} successfully"
+            except:
+                pass
+        self.press_key("f4", ["alt"])
+        return f"Sent close command to {name}"
+
+    def system_command(self, action: str) -> str:
+        act = action.lower().strip()
+        if act == "volume_up":
+            ps_cmd = '$w = New-Object -ComObject WScript.Shell; 1..5 | ForEach-Object { $w.SendKeys([char]175) }'
+            subprocess.run(["powershell", "-Command", ps_cmd], check=False)
+            return "Volume increased 🔊"
+        elif act == "volume_down":
+            ps_cmd = '$w = New-Object -ComObject WScript.Shell; 1..5 | ForEach-Object { $w.SendKeys([char]174) }'
+            subprocess.run(["powershell", "-Command", ps_cmd], check=False)
+            return "Volume decreased 🔉"
+        elif act == "volume_mute":
+            ps_cmd = '$w = New-Object -ComObject WScript.Shell; $w.SendKeys([char]173)'
+            subprocess.run(["powershell", "-Command", ps_cmd], check=False)
+            return "Volume toggled/muted 🔇"
+        elif act == "lock_screen":
+            subprocess.run("rundll32.exe user32.dll,LockWorkStation", shell=True, check=False)
+            return "Workstation locked 🔒"
+        elif act in ["minimize_all", "show_desktop"]:
+            ps_cmd = '(New-Object -ComObject Shell.Application).MinimizeAll()'
+            subprocess.run(["powershell", "-Command", ps_cmd], check=False)
+            return "All windows minimized 🖥️"
+        return f"Executed system command: {action}"
 
     def type_text(self, text: str, press_enter: bool = False) -> str:
         if self.has_pyautogui:

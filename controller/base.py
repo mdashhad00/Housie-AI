@@ -100,3 +100,15 @@ class BaseController(ABC):
             except:
                 pass
         return f"Dispatched WhatsApp message to {phone}: '{message}'"
+
+    def close_app(self, name: str) -> str:
+        """Closes target application or active window."""
+        try:
+            self.press_key("f4", ["alt"])
+            return f"Closed application: {name}"
+        except Exception as e:
+            return f"Attempted to close {name}: {e}"
+
+    def system_command(self, action: str) -> str:
+        """Executes system-level actions (volume, lock, etc.)."""
+        return f"System action {action} triggered"

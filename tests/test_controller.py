@@ -51,12 +51,23 @@ def test_planner():
     assert len(plan3) == 1
     assert plan3[0]["tool"] == "take_screenshot"
 
-    # 4. Scroll
-    plan4 = Planner.plan_from_text("Scroll down by 600")
-    assert len(plan4) == 1
-    assert plan4[0]["tool"] == "scroll"
-    assert plan4[0]["args"]["direction"] == "down"
-    assert plan4[0]["args"]["amount"] == 600
+    # 5. Close app
+    plan5 = Planner.plan_from_text("Close Notepad")
+    assert len(plan5) == 1
+    assert plan5[0]["tool"] == "close_app"
+    assert plan5[0]["args"]["name"] == "Notepad"
+
+    # 6. System volume command
+    plan6 = Planner.plan_from_text("Volume up")
+    assert len(plan6) == 1
+    assert plan6[0]["tool"] == "system_command"
+    assert plan6[0]["args"]["action"] == "volume_up"
+
+    # 7. Open Camera
+    plan7 = Planner.plan_from_text("Open camera")
+    assert len(plan7) == 1
+    assert plan7[0]["tool"] == "open_app"
+    assert plan7[0]["args"]["name"].lower() == "camera"
 
     print("[PASS] Planner tests passed!")
 

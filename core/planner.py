@@ -75,16 +75,40 @@ class Planner:
             steps.append(PlanStep("open_url", {"url": full_url}, f"Open website {full_url}"))
             return [s.to_dict() for s in steps]
 
-        # 4. Open Application
+        # 4. Close Application / Window
+        close_match = re.search(r'(?:close|exit|quit|terminate|band\s+karo)\s+(?:the\s+)?([a-zA-Z0-9\s\.\-_]+?)(?:\s+app|\s+application|\s+window)?$', clean, re.IGNORECASE)
+        if close_match:
+            app_to_close = close_match.group(1).strip()
+            steps.append(PlanStep("close_app", {"name": app_to_close}, f"Close {app_to_close}"))
+            return [s.to_dict() for s in steps]
+
+        # 5. System Commands (Volume, Lock, Minimize)
+        if re.search(r'\b(?:volume\s+up|sound\s+up|awaz\s+badhao|badhao\s+volume)\b', clean, re.IGNORECASE):
+            steps.append(PlanStep("system_command", {"action": "volume_up"}, "Turn volume up"))
+            return [s.to_dict() for s in steps]
+        elif re.search(r'\b(?:volume\s+down|sound\s+down|awaz\s+kam\s+karo|kam\s+karo\s+volume)\b', clean, re.IGNORECASE):
+            steps.append(PlanStep("system_command", {"action": "volume_down"}, "Turn volume down"))
+            return [s.to_dict() for s in steps]
+        elif re.search(r'\b(?:mute|unmute|awaz\s+band)\b', clean, re.IGNORECASE):
+            steps.append(PlanStep("system_command", {"action": "volume_mute"}, "Toggle volume mute"))
+            return [s.to_dict() for s in steps]
+        elif re.search(r'\b(?:lock\s+screen|lock\s+workstation|lock\s+pc|lock\s+computer)\b', clean, re.IGNORECASE):
+            steps.append(PlanStep("system_command", {"action": "lock_screen"}, "Lock computer screen"))
+            return [s.to_dict() for s in steps]
+        elif re.search(r'\b(?:minimize\s+all|minimize\s+windows|show\s+desktop)\b', clean, re.IGNORECASE):
+            steps.append(PlanStep("system_command", {"action": "minimize_all"}, "Minimize all windows to desktop"))
+            return [s.to_dict() for s in steps]
+
+        # 6. Open Application (including Camera, Calculator, Notepad, etc.)
         app_match = re.search(r'(?:open|launch|start|run|chalao|kholo)\s+(?:the\s+)?([a-zA-Z0-9\s\.\-_]+?)(?:\s+app|\s+application)?$', clean, re.IGNORECASE)
         if app_match:
             target_app = app_match.group(1).strip()
-            # Ignore common non-apps
-            if target_app.lower() not in ["camera", "photo", "microphone", "door", "window"]:
+            # Ignore words that are not apps
+            if target_app.lower() not in ["door", "window", "eyes", "mouth"]:
                 steps.append(PlanStep("open_app", {"name": target_app}, f"Launch application {target_app}"))
                 return [s.to_dict() for s in steps]
 
-        # 5. Type text
+        # 7. Type text
         type_match = re.search(r'(?:type|write|enter|likho)\s+["\']?(.+?)["\']?(?:\s+and\s+press\s+enter)?$', clean, re.IGNORECASE)
         if type_match:
             text_to_type = type_match.group(1).strip()
@@ -92,7 +116,7 @@ class Planner:
             steps.append(PlanStep("type_text", {"text": text_to_type, "press_enter": press_enter}, f"Type '{text_to_type}'"))
             return [s.to_dict() for s in steps]
 
-        # 6. Press key / shortcut
+        # 8. Press key / shortcut
         key_match = re.search(r'(?:press|hit|dabao)\s+([a-zA-Z0-9\+\s]+)', clean, re.IGNORECASE)
         if key_match:
             raw_keys = key_match.group(1).lower().strip()
@@ -106,12 +130,12 @@ class Planner:
                 steps.append(PlanStep("press_key", {"key": raw_keys}, f"Press key {raw_keys}"))
                 return [s.to_dict() for s in steps]
 
-        # 7. Screenshot
+        # 9. Screenshot
         if re.search(r'screenshot|screen\s+capture|screen\s+grab|screencap', clean, re.IGNORECASE):
             steps.append(PlanStep("take_screenshot", {}, "Capture full screen"))
             return [s.to_dict() for s in steps]
 
-        # 8. Scroll
+        # 10. Scroll
         scroll_match = re.search(r'scroll\s+(up|down|left|right)(?:\s+by\s+(\d+))?', clean, re.IGNORECASE)
         if scroll_match:
             direction = scroll_match.group(1).lower()
@@ -119,7 +143,7 @@ class Planner:
             steps.append(PlanStep("scroll", {"amount": amount, "direction": direction}, f"Scroll {direction}"))
             return [s.to_dict() for s in steps]
 
-        # 9. Mouse click
+        # 11. Mouse click
         click_match = re.search(r'(?:click|double\s+click|right\s+click)(?:\s+at\s+(\d+)[,\s]+(\d+))?', clean, re.IGNORECASE)
         if click_match:
             is_double = "double" in clean.lower()
