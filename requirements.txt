@@ -1,3 +1,7 @@
 Flask==3.0.3
 flask-cors==4.0.1
 sympy==1.13.1
+
+# Optional dependencies for Local AI Qwen2.5 1.5B (4 GB RAM) & Hardware Mouse/Keyboard Control:
+# pip install llama-cpp-python  # Enables local in-process Qwen2.5-1.5B-Instruct GGUF inference
+# pip install pyautogui pillow   # Enables native hardware cursor movement & screen captures

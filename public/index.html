@@ -1712,6 +1712,26 @@ function HousieApp() {
     setSpeech(thinkPhrases[Math.floor(Math.random() * thinkPhrases.length)]);
     setShowSpeech(true);
 
+    // 1. Native Desktop / Electron Computer Control Check
+    if (window.electronAPI && window.electronAPI.executeControlCommand) {
+      try {
+        const ctrlRes = await window.electronAPI.executeControlCommand(msg);
+        if (ctrlRes && ctrlRes.plan && ctrlRes.plan.length > 0) {
+          const planText = ctrlRes.plan.map((s, idx) => `• **Step ${idx+1}:** \`${s.tool}(${JSON.stringify(s.args)})\``).join('\n');
+          setIsTyping(false);
+          setMessages(prev => [...prev, {
+            role: 'ai',
+            text: `🖥️ **Desktop Computer Action Executed** (${(ctrlRes.platform||'OS').toUpperCase()}):\n${planText}\n\n✅ Automation executed successfully!`,
+            time: timeNow()
+          }]);
+          setSpeech('Executed! ⚡');
+          setTalking(true);
+          setTimeout(() => { setTalking(false); setShowSpeech(false); }, 2200);
+          return;
+        }
+      } catch (e) {}
+    }
+
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -1812,6 +1832,16 @@ function HousieApp() {
           >
             📲 Get App
           </button>
+
+          {/* Speech Assist Button */}
+          <a
+            href="./speech-assist/index.html"
+            className="get-app-btn"
+            style={{textDecoration:'none', background:'linear-gradient(135deg,#6366f1,#4f46e5)', border:'none', color:'#fff', display:'inline-flex', alignItems:'center', gap:'4px'}}
+            title="Open SpeechAssist — AI voice assistant"
+          >
+            🎙 Speech
+          </a>
 
           {/* TTS Toggle */}
           <button
